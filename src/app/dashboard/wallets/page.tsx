@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Wallet } from "lucide-react";
+import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
 
 const typeLabels: Record<string, string> = {
   CASH: "Tunai",
@@ -21,7 +22,7 @@ const typeVariants: Record<string, "default" | "secondary" | "outline"> = {
 
 export default async function WalletsPage() {
   const member = await getCurrentFamilyMember();
-  if (!member) return null;
+  if (!member) return <NoFamilyPrompt />;
 
   const wallets = await prisma.wallet.findMany({
     where: { familyId: member.familyId },

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, CheckCircle2, Receipt } from "lucide-react";
+import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
 
 const recurrenceLabels: Record<string, string> = {
   ONCE: "Sekali",
@@ -16,7 +17,7 @@ const recurrenceLabels: Record<string, string> = {
 
 export default async function BillsPage() {
   const member = await getCurrentFamilyMember();
-  if (!member) return null;
+  if (!member) return <NoFamilyPrompt />;
 
   const [wallets, bills] = await Promise.all([
     prisma.wallet.findMany({

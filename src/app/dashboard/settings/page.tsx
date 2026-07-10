@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Save } from "lucide-react";
+import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
 
 export default async function SettingsPage() {
   const member = await getCurrentFamilyMember();
-  if (!member) return null;
+  if (!member) return <NoFamilyPrompt />;
 
   const setting = await prisma.setting.findUnique({
     where: { familyId: member.familyId },
