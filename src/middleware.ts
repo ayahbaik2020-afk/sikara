@@ -8,14 +8,14 @@ export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
   const pathname = request.nextUrl.pathname;
 
-  if (!user && protectedRoutes.some((r) => pathname.startsWith(r))) {
+  if (!user && (pathname === "/" || protectedRoutes.some((r) => pathname.startsWith(r)))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user && authRoutes.includes(pathname)) {
+  if (user && (pathname === "/" || authRoutes.includes(pathname))) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
