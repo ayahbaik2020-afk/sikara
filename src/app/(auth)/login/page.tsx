@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useActionState } from "react"
-import { PiggyBank, Lock } from "lucide-react"
+import Image from "next/image"
+import { Lock } from "lucide-react"
 import { login } from "@/features/auth/actions"
 import { cn } from "@/lib/utils"
 
@@ -86,7 +87,7 @@ export default function LoginPage() {
 
           <div className="card-face">
             <div className="brand-icon">
-              <PiggyBank className="size-6 text-white" />
+              <Image src="/logo-sikaraman.png" alt="SIKARA" width={32} height={32} className="size-8" />
             </div>
             <h4>SIKARA</h4>
             <small>Sistem Keuangan Keluarga</small>

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   TrendingUp,
@@ -10,7 +11,6 @@ import {
   Users,
   Settings,
   LayoutDashboard,
-  PiggyBank,
 } from "lucide-react"
 import {
   Sidebar,
@@ -65,7 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link href="/dashboard">
-                <PiggyBank />
+                <Image src="/logo-sikaraman.png" alt="SIKARA" width={24} height={24} className="size-6" />
                 <span className="font-semibold text-base">SIKARA</span>
               </Link>
             </SidebarMenuButton>
