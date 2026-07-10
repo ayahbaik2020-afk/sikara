@@ -1,0 +1,1 @@
+Lihat standar coding, modular, SOLID, DRY, update CHANGELOG.md dan TASKS.md setiap selesai fitur.
