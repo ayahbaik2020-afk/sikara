@@ -2,6 +2,10 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { removeMember } from "@/features/family/actions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Shield, Trash2, User } from "lucide-react";
 
 export default async function FamilyDetailPage({
   params,
@@ -36,52 +40,75 @@ export default async function FamilyDetailPage({
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col p-4 pt-8">
       <a
         href="/dashboard"
-        className="text-muted-foreground hover:text-foreground mb-4 text-sm"
+        className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1 text-sm"
       >
-        &larr; Kembali
+        <ArrowLeft className="size-4" />
+        Kembali
       </a>
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{family.name}</h1>
-        <p className="text-muted-foreground text-sm">
-          Kode undangan: <span className="font-mono">{family.inviteCode}</span>
-        </p>
-      </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-2xl">{family.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground text-sm">
+            Kode undangan:{" "}
+            <span className="font-mono font-medium">{family.inviteCode}</span>
+          </p>
+        </CardContent>
+      </Card>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold">
-          Anggota ({family.members.length})
-        </h2>
-        <div className="space-y-2">
-          {family.members.map((member) => (
-            <div
-              key={member.id}
-              className="border-border flex items-center justify-between rounded-lg border p-3"
-            >
-              <div>
-                <p className="font-medium">
-                  {member.profile.name || member.profile.email}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {member.role === "ADMIN" ? "Admin" : "Anggota"}
-                </p>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Anggota ({family.members.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {family.members.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+                    <User className="size-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium">
+                      {member.profile.name || member.profile.email}
+                    </p>
+                    <Badge
+                      variant={member.role === "ADMIN" ? "default" : "secondary"}
+                      className="mt-0.5"
+                    >
+                      {member.role === "ADMIN" ? (
+                        <Shield className="size-3" />
+                      ) : null}
+                      {member.role === "ADMIN" ? "Admin" : "Anggota"}
+                    </Badge>
+                  </div>
+                </div>
+                {isAdmin && member.profileId !== user.id && (
+                  <form action={removeMember}>
+                    <input type="hidden" name="memberId" value={member.id} />
+                    <input type="hidden" name="familyId" value={id} />
+                    <Button
+                      type="submit"
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="size-4" />
+                      Hapus
+                    </Button>
+                  </form>
+                )}
               </div>
-              {isAdmin && member.profileId !== user.id && (
-                <form action={removeMember}>
-                  <input type="hidden" name="memberId" value={member.id} />
-                  <input type="hidden" name="familyId" value={id} />
-                  <button
-                    type="submit"
-                    className="text-destructive hover:text-destructive/80 text-sm underline-offset-2 hover:underline"
-                  >
-                    Hapus
-                  </button>
-                </form>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

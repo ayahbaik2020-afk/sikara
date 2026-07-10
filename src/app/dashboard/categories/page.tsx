@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createCategory, deleteCategory } from "@/features/category/actions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Trash2 } from "lucide-react";
 
 export default async function CategoriesPage() {
   const member = await getCurrentFamilyMember();
@@ -18,57 +22,63 @@ export default async function CategoriesPage() {
     <div className="mx-auto max-w-3xl space-y-6 p-4 pt-6">
       <h1 className="text-2xl font-bold">Kategori</h1>
 
-      <div className="border-border mb-8 rounded-lg border p-4">
-        <h2 className="mb-3 font-semibold">Tambah Kategori</h2>
-        <form action={createCategory} className="flex flex-wrap gap-2">
-          <input
-            name="name"
-            placeholder="Nama kategori"
-            required
-            className="border-input bg-background h-9 flex-1 rounded-md border px-3 text-sm"
-          />
-          <select
-            name="type"
-            required
-            className="border-input bg-background h-9 rounded-md border px-3 text-sm"
-          >
-            <option value="INCOME">Pemasukan</option>
-            <option value="EXPENSE">Pengeluaran</option>
-          </select>
-          <input
-            name="color"
-            type="color"
-            defaultValue="#6366F1"
-            className="h-9 w-9 rounded-md border"
-          />
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium"
-          >
-            Tambah
-          </button>
-        </form>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Tambah Kategori</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={createCategory} className="flex flex-wrap gap-2">
+            <Input
+              name="name"
+              placeholder="Nama kategori"
+              required
+              className="min-w-[160px] flex-1"
+            />
+            <select
+              name="type"
+              required
+              className="flex h-8 min-w-[140px] items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="INCOME">Pemasukan</option>
+              <option value="EXPENSE">Pengeluaran</option>
+            </select>
+            <Input
+              name="color"
+              type="color"
+              defaultValue="#6366F1"
+              className="h-8 w-9 p-0.5"
+            />
+            <Button type="submit">
+              <Plus className="size-4" />
+              Tambah
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-lg font-semibold text-green-600">
-          Pemasukan
-        </h2>
-        <CategoryList
-          categories={incomeCategories}
-          onDelete={deleteCategory}
-        />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-green-600">Pemasukan</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CategoryList
+            categories={incomeCategories}
+            onDelete={deleteCategory}
+          />
+        </CardContent>
+      </Card>
 
-      <section>
-        <h2 className="mb-3 text-lg font-semibold text-red-600">
-          Pengeluaran
-        </h2>
-        <CategoryList
-          categories={expenseCategories}
-          onDelete={deleteCategory}
-        />
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-red-600">Pengeluaran</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CategoryList
+            categories={expenseCategories}
+            onDelete={deleteCategory}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -91,7 +101,7 @@ function CategoryList({
       {categories.map((cat) => (
         <div
           key={cat.id}
-          className="border-border flex items-center justify-between rounded-lg border p-3"
+          className="flex items-center justify-between rounded-lg border p-3"
         >
           <div className="flex items-center gap-3">
             <span
@@ -100,17 +110,17 @@ function CategoryList({
             />
             <span>{cat.name}</span>
           </div>
-          <div className="flex gap-2">
-            <form action={onDelete}>
-              <input type="hidden" name="id" value={cat.id} />
-              <button
-                type="submit"
-                className="text-destructive hover:text-destructive/80 text-sm"
-              >
-                Hapus
-              </button>
-            </form>
-          </div>
+          <form action={onDelete}>
+            <input type="hidden" name="id" value={cat.id} />
+            <Button
+              type="submit"
+              variant="destructive"
+              size="sm"
+            >
+              <Trash2 className="size-4" />
+              Hapus
+            </Button>
+          </form>
         </div>
       ))}
     </div>
