@@ -22,46 +22,69 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const memberships = await prisma.familyMember.findMany({
-    where: { profileId: user.id },
-    include: { family: true },
-  });
+  let memberships: any[] = [];
+  let wallets: any[] = [];
+  let walletAgg: any = {};
+  let walletCount = 0;
+  let incomeAgg: any = {};
+  let expenseAgg: any = {};
+  let recentTransactions: any[] = [];
 
-  const familyIds = memberships.map((m) => m.familyId);
+  try {
+    memberships = await prisma.familyMember.findMany({
+      where: { profileId: user.id },
+      include: { family: true },
+    });
 
-  const [walletAgg, walletCount, incomeAgg, expenseAgg, recentTransactions] =
-    await Promise.all([
-      prisma.wallet.aggregate({
-        _sum: { balance: true },
+    const familyIds = memberships.map((m) => m.familyId);
+
+    if (familyIds.length > 0) {
+      [walletAgg, walletCount, incomeAgg, expenseAgg, recentTransactions] =
+        await Promise.all([
+          prisma.wallet.aggregate({
+            _sum: { balance: true },
+            where: { familyId: { in: familyIds }, isActive: true },
+          }),
+          prisma.wallet.count({
+            where: { familyId: { in: familyIds }, isActive: true },
+          }),
+          prisma.transaction.aggregate({
+            _sum: { amount: true },
+            where: { familyId: { in: familyIds }, type: "INCOME" },
+          }),
+          prisma.transaction.aggregate({
+            _sum: { amount: true },
+            where: { familyId: { in: familyIds }, type: "EXPENSE" },
+          }),
+          prisma.transaction.findMany({
+            where: { familyId: { in: familyIds } },
+            include: { wallet: true, category: true },
+            orderBy: { transactionDate: "desc" },
+            take: 5,
+          }),
+        ]);
+
+      wallets = await prisma.wallet.findMany({
         where: { familyId: { in: familyIds }, isActive: true },
-      }),
-      prisma.wallet.count({
-        where: { familyId: { in: familyIds }, isActive: true },
-      }),
-      prisma.transaction.aggregate({
-        _sum: { amount: true },
-        where: { familyId: { in: familyIds }, type: "INCOME" },
-      }),
-      prisma.transaction.aggregate({
-        _sum: { amount: true },
-        where: { familyId: { in: familyIds }, type: "EXPENSE" },
-      }),
-      prisma.transaction.findMany({
-        where: { familyId: { in: familyIds } },
-        include: { wallet: true, category: true },
-        orderBy: { transactionDate: "desc" },
-        take: 5,
-      }),
-    ]);
+        orderBy: { balance: "desc" },
+      });
+    }
+  } catch (e: any) {
+    return (
+      <div className="p-8">
+        <h2 className="text-xl font-bold mb-4">Error Dashboard</h2>
+        <pre className="bg-red-50 dark:bg-red-950 text-red-600 p-4 rounded-lg text-sm whitespace-pre-wrap">
+          {e?.message || String(e)}
+          {"\n\n"}
+          {e?.stack || ""}
+        </pre>
+      </div>
+    );
+  }
 
-  const wallets = await prisma.wallet.findMany({
-    where: { familyId: { in: familyIds }, isActive: true },
-    orderBy: { balance: "desc" },
-  });
-
-  const totalBalance = Number(walletAgg._sum.balance || 0);
-  const totalIncome = Number(incomeAgg._sum.amount || 0);
-  const totalExpense = Number(expenseAgg._sum.amount || 0);
+  const totalBalance = Number(walletAgg?._sum?.balance || 0);
+  const totalIncome = Number(incomeAgg?._sum?.amount || 0);
+  const totalExpense = Number(expenseAgg?._sum?.amount || 0);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
