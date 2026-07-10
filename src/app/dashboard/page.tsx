@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import type { FamilyMember, Wallet, Transaction } from "@/generated/prisma/client";
 import { createFamily, joinFamily } from "@/features/family/actions";
 import Link from "next/link";
 import {
-  Wallet,
+  Wallet as WalletIcon,
   Tags,
   Users,
-
   Plus,
   ArrowRight,
   TrendingUp,
@@ -22,24 +22,24 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  let memberships: any[] = [];
-  let wallets: any[] = [];
-  let walletAgg: any = {};
+  let memberships: (FamilyMember & { family: { id: string; name: string } })[] = [];
+  let wallets: Wallet[] = [];
+  let totalBalance = 0;
   let walletCount = 0;
-  let incomeAgg: any = {};
-  let expenseAgg: any = {};
-  let recentTransactions: any[] = [];
+  let totalIncome = 0;
+  let totalExpense = 0;
+  let recentTransactions: (Transaction & { wallet: { name: string }; category: { name: string } })[] = [];
 
   try {
     memberships = await prisma.familyMember.findMany({
       where: { profileId: user.id },
-      include: { family: true },
-    });
+      include: { family: { select: { id: true, name: true } } },
+    }) as unknown as typeof memberships;
 
     const familyIds = memberships.map((m) => m.familyId);
 
     if (familyIds.length > 0) {
-      [walletAgg, walletCount, incomeAgg, expenseAgg, recentTransactions] =
+      const [walletAgg, wCount, incomeAgg, expenseAgg, txs] =
         await Promise.all([
           prisma.wallet.aggregate({
             _sum: { balance: true },
@@ -58,33 +58,34 @@ export default async function DashboardPage() {
           }),
           prisma.transaction.findMany({
             where: { familyId: { in: familyIds } },
-            include: { wallet: true, category: true },
+            include: { wallet: { select: { name: true } }, category: { select: { name: true } } },
             orderBy: { transactionDate: "desc" },
             take: 5,
           }),
         ]);
+
+      totalBalance = Number(walletAgg._sum.balance || 0);
+      totalIncome = Number(incomeAgg._sum.amount || 0);
+      totalExpense = Number(expenseAgg._sum.amount || 0);
+      walletCount = wCount;
+      recentTransactions = txs as unknown as typeof recentTransactions;
 
       wallets = await prisma.wallet.findMany({
         where: { familyId: { in: familyIds }, isActive: true },
         orderBy: { balance: "desc" },
       });
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? `${e.message}\n\n${e.stack}` : String(e);
     return (
       <div className="p-8">
         <h2 className="text-xl font-bold mb-4">Error Dashboard</h2>
         <pre className="bg-red-50 dark:bg-red-950 text-red-600 p-4 rounded-lg text-sm whitespace-pre-wrap">
-          {e?.message || String(e)}
-          {"\n\n"}
-          {e?.stack || ""}
+          {message}
         </pre>
       </div>
     );
   }
-
-  const totalBalance = Number(walletAgg?._sum?.balance || 0);
-  const totalIncome = Number(incomeAgg?._sum?.amount || 0);
-  const totalExpense = Number(expenseAgg?._sum?.amount || 0);
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -126,7 +127,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Dompet Aktif</CardTitle>
-            <Wallet className="size-4 text-muted-foreground" />
+            <WalletIcon className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{walletCount}</p>
@@ -169,7 +170,7 @@ export default async function DashboardPage() {
           <Card className="transition-colors hover:bg-accent/50">
             <CardContent className="flex items-center gap-3 p-4">
               <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                <Wallet className="size-5 text-primary" />
+                <WalletIcon className="size-5 text-primary" />
               </div>
               <span className="text-sm font-medium">Kelola Dompet</span>
             </CardContent>
