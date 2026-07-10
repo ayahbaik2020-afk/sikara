@@ -36,6 +36,7 @@ enum FamilyRole {
 model Profile {
   id        String   @id @default(uuid())
   email     String   @unique
+  username  String   @unique
   name      String?
   avatarUrl String?
   role      Role     @default(MEMBER)
