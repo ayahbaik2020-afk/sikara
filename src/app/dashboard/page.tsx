@@ -77,9 +77,13 @@ export default async function DashboardPage() {
     }
   } catch (e: unknown) {
     const message = e instanceof Error ? `${e.message}\n\n${e.stack}` : String(e);
+    const dbUrl = process.env.DATABASE_URL || "(TIDAK TERDEFINISI)";
+    const nodeEnv = process.env.NODE_ENV || "(tidak ada)";
     return (
       <div className="p-8">
         <h2 className="text-xl font-bold mb-4">Error Dashboard</h2>
+        <p className="mb-2 text-sm text-muted-foreground">DATABASE_URL: {dbUrl}</p>
+        <p className="mb-2 text-sm text-muted-foreground">NODE_ENV: {nodeEnv}</p>
         <pre className="bg-red-50 dark:bg-red-950 text-red-600 p-4 rounded-lg text-sm whitespace-pre-wrap">
           {message}
         </pre>
