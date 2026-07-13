@@ -63,6 +63,8 @@ model Family {
   setting      Setting?
   bills        Bill[]
   savingsGoals SavingsGoal[]
+  assets       Asset[]
+  investments  Investment[]
 
   @@map("families")
 }
@@ -198,4 +200,50 @@ model SavingsGoal {
   updatedAt     DateTime  @updatedAt
 
   @@map("savings_goals")
+}
+
+enum AssetCategory {
+  PROPERTY
+  VEHICLE
+  ELECTRONICS
+  OTHER
+}
+
+model Asset {
+  id            String        @id @default(uuid())
+  familyId      String
+  family        Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  name          String
+  category      AssetCategory @default(OTHER)
+  purchaseValue Decimal       @db.Decimal(18, 2)
+  currentValue  Decimal       @db.Decimal(18, 2)
+  purchaseDate  DateTime?
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("assets")
+}
+
+enum InvestmentType {
+  STOCK
+  MUTUAL_FUND
+  GOLD
+  CRYPTO
+  OTHER
+}
+
+model Investment {
+  id               String         @id @default(uuid())
+  familyId         String
+  family           Family         @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  name             String
+  type             InvestmentType @default(OTHER)
+  amountInvested   Decimal        @db.Decimal(18, 2)
+  currentValue     Decimal        @db.Decimal(18, 2)
+  note             String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("investments")
 }

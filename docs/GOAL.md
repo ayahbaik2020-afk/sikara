@@ -17,8 +17,8 @@ fungsi CRUD yang benar-benar jalan (bukan cuma server action tanpa UI).
 - [x] Target Keuangan (Goals) — lihat di atas
 - [ ] Hutang (Debt) — belum ada
 - [ ] Piutang (Receivables) — belum ada
-- [ ] Investasi — belum ada
-- [ ] Aset — belum ada
+- [x] Investasi — selesai (Sprint 11)
+- [x] Aset — selesai (Sprint 11)
 - [ ] Laporan (PDF/Excel) — belum ada
 - [ ] Grafik Dashboard (recharts terinstall, belum dipakai) — belum ada
 - [ ] Notifikasi + Audit Log — belum ada

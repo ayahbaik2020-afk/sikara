@@ -16,6 +16,8 @@ import {
   ArrowLeftRight,
   Receipt,
   PiggyBank,
+  Home,
+  LineChart,
 } from "lucide-react"
 import {
   Sidebar,
@@ -51,6 +53,8 @@ const navGroups = [
     items: [
       { title: "Tagihan", url: "/dashboard/bills", icon: Receipt },
       { title: "Tabungan", url: "/dashboard/savings", icon: PiggyBank },
+      { title: "Aset", url: "/dashboard/assets", icon: Home },
+      { title: "Investasi", url: "/dashboard/investments", icon: LineChart },
     ],
   },
   {
