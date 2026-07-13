@@ -19,8 +19,8 @@ fungsi CRUD yang benar-benar jalan (bukan cuma server action tanpa UI).
 - [x] Piutang (Receivables) — selesai (Sprint 12)
 - [x] Investasi — selesai (Sprint 11)
 - [x] Aset — selesai (Sprint 11)
-- [ ] Laporan (PDF/Excel) — belum ada
-- [ ] Grafik Dashboard (recharts terinstall, belum dipakai) — belum ada
+- [x] Laporan (grafik di layar, tanpa export — sesuai keputusan) — selesai (Sprint 13)
+- [x] Grafik Dashboard (bar chart 6 bulan + pie chart kategori) — selesai (Sprint 13)
 - [ ] Notifikasi + Audit Log — belum ada
 - [ ] Backup & Restore — belum ada
 - [ ] Role granular (Ayah/Ibu/Anak) vs schema saat ini (ADMIN/MEMBER)

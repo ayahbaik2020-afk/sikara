@@ -19,6 +19,7 @@ import {
   Home,
   LineChart,
   HandCoins,
+  BarChart3,
 } from "lucide-react"
 import {
   Sidebar,
@@ -39,6 +40,7 @@ const navGroups = [
     label: "Umum",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Laporan", url: "/dashboard/reports", icon: BarChart3 },
     ],
   },
   {
