@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
+import { logAudit } from "@/lib/helpers/audit";
 
 export async function createSavingsGoal(formData: FormData) {
   const member = await getCurrentFamilyMember();
@@ -89,4 +90,9 @@ export async function addContribution(formData: FormData) {
 
   revalidatePath("/dashboard/savings");
   revalidatePath("/dashboard");
+  await logAudit(
+    member.familyId,
+    "ADD_SAVINGS_CONTRIBUTION",
+    `Menabung Rp ${amount.toLocaleString("id-ID")} untuk "${goal.name}"`
+  );
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/helpers/audit";
 
 export async function createReceivable(formData: FormData) {
   const member = await getCurrentFamilyMember();
@@ -79,4 +80,9 @@ export async function receivePayment(formData: FormData) {
 
   revalidatePath("/dashboard/receivables");
   revalidatePath("/dashboard");
+  await logAudit(
+    member.familyId,
+    "RECEIVE_PAYMENT",
+    `Menerima piutang "${receivable.name}" Rp ${amount.toLocaleString("id-ID")}`
+  );
 }

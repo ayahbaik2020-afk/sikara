@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/helpers/audit";
 
 export async function createTransaction(formData: FormData) {
   const member = await getCurrentFamilyMember();
@@ -59,6 +60,11 @@ export async function createTransaction(formData: FormData) {
   const path = type === "INCOME" ? "/dashboard/income" : "/dashboard/expense";
   revalidatePath(path);
   revalidatePath("/dashboard");
+  await logAudit(
+    member.familyId,
+    type === "INCOME" ? "CREATE_INCOME" : "CREATE_EXPENSE",
+    `${type === "INCOME" ? "Menambah pemasukan" : "Menambah pengeluaran"} Rp ${amount.toLocaleString("id-ID")}${description ? ` (${description})` : ""}`
+  );
 }
 
 export async function deleteTransaction(formData: FormData) {
@@ -89,4 +95,9 @@ export async function deleteTransaction(formData: FormData) {
   const path = type === "INCOME" ? "/dashboard/income" : "/dashboard/expense";
   revalidatePath(path);
   revalidatePath("/dashboard");
+  await logAudit(
+    member.familyId,
+    "DELETE_TRANSACTION",
+    `Menghapus ${transaction.type === "INCOME" ? "pemasukan" : "pengeluaran"} Rp ${Number(transaction.amount).toLocaleString("id-ID")}`
+  );
 }

@@ -67,6 +67,7 @@ model Family {
   investments  Investment[]
   debts        Debt[]
   receivables  Receivable[]
+  auditLogs    AuditLog[]
 
   @@map("families")
 }
@@ -278,4 +279,17 @@ model Receivable {
   updatedAt   DateTime  @updatedAt
 
   @@map("receivables")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  familyId    String
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  profileId   String?
+  action      String
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([familyId, createdAt])
+  @@map("audit_logs")
 }

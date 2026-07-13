@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/helpers/audit";
 import { randomUUID } from "crypto";
 
 export async function createTransfer(formData: FormData) {
@@ -82,6 +83,11 @@ export async function createTransfer(formData: FormData) {
 
   revalidatePath("/dashboard/transfer");
   revalidatePath("/dashboard");
+  await logAudit(
+    member.familyId,
+    "CREATE_TRANSFER",
+    `Transfer Rp ${amount.toLocaleString("id-ID")} dari ${fromWallet.name} ke ${toWallet.name}`
+  );
 }
 
 export async function deleteTransfer(formData: FormData) {
@@ -92,25 +98,12 @@ export async function deleteTransfer(formData: FormData) {
 
   const pair = await prisma.transaction.findMany({
     where: { transferPairId: pairId, familyId: member.familyId },
+    include: { wallet: { select: { name: true } } },
   });
   if (pair.length !== 2) throw new Error("Data transfer tidak ditemukan");
 
-  await prisma.$transaction([
-    ...pair.map((t) =>
-      prisma.wallet.update({
-        where: { id: t.walletId },
-        data: {
-          // reverse: the "from" row had money removed, "to" row had money added.
-          // We reverse each row individually using its own sign via description marker
-          // is unreliable, so instead reverse using amount direction below.
-          balance: { increment: 0 },
-        },
-      })
-    ),
-  ]);
-
-  // Reverse balances correctly: find which row decremented vs incremented
-  // by re-deriving from description prefix.
+  // "from" row had money removed (Transfer ke ...), "to" row had money
+  // added (Transfer dari ...) — reverse each accordingly.
   const fromRow = pair.find((t) => t.description?.startsWith("Transfer ke"));
   const toRow = pair.find((t) => t.description?.startsWith("Transfer dari"));
 
@@ -133,4 +126,9 @@ export async function deleteTransfer(formData: FormData) {
 
   revalidatePath("/dashboard/transfer");
   revalidatePath("/dashboard");
+  await logAudit(
+    member.familyId,
+    "DELETE_TRANSFER",
+    `Menghapus transfer Rp ${Number(pair[0].amount).toLocaleString("id-ID")} (${pair[0].wallet.name} \u2194 ${pair[1].wallet.name})`
+  );
 }

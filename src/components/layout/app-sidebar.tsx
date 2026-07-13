@@ -20,6 +20,8 @@ import {
   LineChart,
   HandCoins,
   BarChart3,
+  Bell,
+  History,
 } from "lucide-react"
 import {
   Sidebar,
@@ -40,6 +42,7 @@ const navGroups = [
     label: "Umum",
     items: [
       { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Notifikasi", url: "/dashboard/notifications", icon: Bell },
       { title: "Laporan", url: "/dashboard/reports", icon: BarChart3 },
     ],
   },
@@ -73,6 +76,7 @@ const navGroups = [
     label: "Lainnya",
     items: [
       { title: "Keluarga", url: "/dashboard/families/", icon: Users },
+      { title: "Audit Log", url: "/dashboard/audit-log", icon: History },
       { title: "Pengaturan", url: "/dashboard/settings", icon: Settings },
     ],
   },

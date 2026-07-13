@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/helpers/audit";
 
 export async function createBill(formData: FormData) {
   const member = await getCurrentFamilyMember();
@@ -115,4 +116,9 @@ export async function payBill(formData: FormData) {
   revalidatePath("/dashboard/bills");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/expense");
+  await logAudit(
+    member.familyId,
+    "PAY_BILL",
+    `Membayar tagihan "${bill.name}" Rp ${Number(bill.amount).toLocaleString("id-ID")}`
+  );
 }
