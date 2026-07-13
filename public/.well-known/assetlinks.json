@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.sikaraman.twa",
+      "sha256_cert_fingerprints": [
+        "75:35:C6:E0:79:D3:69:44:50:A8:45:E6:9A:86:8E:4B:3F:23:0B:9F:BD:1D:53:DC:73:17:94:46:3B:B6:8F:33"
+      ]
+    }
+  }
+]
