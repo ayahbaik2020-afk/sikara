@@ -15,6 +15,7 @@ import {
   LogOut,
   ArrowLeftRight,
   Receipt,
+  PiggyBank,
 } from "lucide-react"
 import {
   Sidebar,
@@ -49,6 +50,7 @@ const navGroups = [
     label: "Perencanaan",
     items: [
       { title: "Tagihan", url: "/dashboard/bills", icon: Receipt },
+      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyBank },
     ],
   },
   {

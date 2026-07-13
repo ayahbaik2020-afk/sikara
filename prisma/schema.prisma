@@ -62,6 +62,7 @@ model Family {
   transactions Transaction[]
   setting      Setting?
   bills        Bill[]
+  savingsGoals SavingsGoal[]
 
   @@map("families")
 }
@@ -182,4 +183,19 @@ model Bill {
 
   @@index([familyId, status])
   @@map("bills")
+}
+
+model SavingsGoal {
+  id            String    @id @default(uuid())
+  familyId      String
+  family        Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  name          String
+  currentAmount Decimal   @default(0) @db.Decimal(18, 2)
+  targetAmount  Decimal?  @db.Decimal(18, 2)
+  targetDate    DateTime?
+  note          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("savings_goals")
 }

@@ -12,9 +12,9 @@ fungsi CRUD yang benar-benar jalan (bukan cuma server action tanpa UI).
 ## Checklist Modul
 
 - [x] Transfer — UI + sidebar selesai (perlu di-test manual & npm run build)
-- [ ] Tagihan (Bills) — belum ada sama sekali
-- [ ] Tabungan (Savings) — belum ada
-- [ ] Target Keuangan (Goals) — belum ada
+- [x] Tagihan (Bills) — selesai (Sprint 9)
+- [x] Tabungan (Savings) — digabung dengan Target dalam satu model SavingsGoal
+- [x] Target Keuangan (Goals) — lihat di atas
 - [ ] Hutang (Debt) — belum ada
 - [ ] Piutang (Receivables) — belum ada
 - [ ] Investasi — belum ada
