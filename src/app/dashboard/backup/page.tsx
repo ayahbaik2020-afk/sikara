@@ -4,10 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Upload, AlertTriangle } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 export default async function BackupPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  if (getAccess("backup", member.role) === "none") {
+    return <AccessDenied moduleName="Backup & Restore" />;
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4 pt-6">

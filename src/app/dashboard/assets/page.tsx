@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Home, Trash2, Plus } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 const categoryLabels: Record<string, string> = {
   PROPERTY: "Properti",
@@ -18,6 +20,9 @@ const categoryLabels: Record<string, string> = {
 export default async function AssetsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  const access = getAccess("assets", member.role);
+  if (access === "none") return <AccessDenied moduleName="Aset" />;
+  const canEdit = access === "full";
 
   const assets = await prisma.asset.findMany({
     where: { familyId: member.familyId },
@@ -35,36 +40,38 @@ export default async function AssetsPage() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tambah Aset</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={createAsset} className="space-y-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input name="name" placeholder="Nama aset (mis. Rumah, Mobil)" required />
-              <select
-                name="category"
-                defaultValue="OTHER"
-                className="flex h-8 w-full items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
-              >
-                <option value="PROPERTY">Properti</option>
-                <option value="VEHICLE">Kendaraan</option>
-                <option value="ELECTRONICS">Elektronik</option>
-                <option value="OTHER">Lainnya</option>
-              </select>
-              <Input name="purchaseValue" type="number" step="0.01" min="0" required placeholder="Nilai beli" />
-              <Input name="currentValue" type="number" step="0.01" min="0" required placeholder="Nilai sekarang" />
-              <Input name="purchaseDate" type="date" placeholder="Tanggal beli (opsional)" />
-            </div>
-            <Input name="note" placeholder="Catatan (opsional)" />
-            <Button type="submit">
-              <Plus className="size-4" />
-              Simpan
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {canEdit && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tambah Aset</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={createAsset} className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input name="name" placeholder="Nama aset (mis. Rumah, Mobil)" required />
+                <select
+                  name="category"
+                  defaultValue="OTHER"
+                  className="flex h-8 w-full items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm"
+                >
+                  <option value="PROPERTY">Properti</option>
+                  <option value="VEHICLE">Kendaraan</option>
+                  <option value="ELECTRONICS">Elektronik</option>
+                  <option value="OTHER">Lainnya</option>
+                </select>
+                <Input name="purchaseValue" type="number" step="0.01" min="0" required placeholder="Nilai beli" />
+                <Input name="currentValue" type="number" step="0.01" min="0" required placeholder="Nilai sekarang" />
+                <Input name="purchaseDate" type="date" placeholder="Tanggal beli (opsional)" />
+              </div>
+              <Input name="note" placeholder="Catatan (opsional)" />
+              <Button type="submit">
+                <Plus className="size-4" />
+                Simpan
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-2">
         {assets.length === 0 ? (
@@ -91,26 +98,30 @@ export default async function AssetsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <form action={updateAssetValue} className="flex items-center gap-2">
-                      <input type="hidden" name="id" value={a.id} />
-                      <Input
-                        name="currentValue"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        defaultValue={Number(a.currentValue)}
-                        className="h-8 w-28"
-                      />
-                      <Button type="submit" size="sm" variant="outline">
-                        Update
-                      </Button>
-                    </form>
-                    <form action={deleteAsset}>
-                      <input type="hidden" name="id" value={a.id} />
-                      <Button type="submit" variant="destructive" size="sm">
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </form>
+                    {canEdit && (
+                      <>
+                        <form action={updateAssetValue} className="flex items-center gap-2">
+                          <input type="hidden" name="id" value={a.id} />
+                          <Input
+                            name="currentValue"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            defaultValue={Number(a.currentValue)}
+                            className="h-8 w-28"
+                          />
+                          <Button type="submit" size="sm" variant="outline">
+                            Update
+                          </Button>
+                        </form>
+                        <form action={deleteAsset}>
+                          <input type="hidden" name="id" value={a.id} />
+                          <Button type="submit" variant="destructive" size="sm">
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </form>
+                      </>
+                    )}
                   </div>
                 </CardContent>
               </Card>

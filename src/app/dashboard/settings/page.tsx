@@ -6,10 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Save } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 export default async function SettingsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  if (getAccess("settings", member.role) === "none") {
+    return <AccessDenied moduleName="Pengaturan" />;
+  }
 
   const setting = await prisma.setting.findUnique({
     where: { familyId: member.familyId },

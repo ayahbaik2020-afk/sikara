@@ -5,10 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/helpers/audit";
+import { getAccess } from "@/lib/helpers/access";
+
+function assertCanEdit(role: string) {
+  if (getAccess("debts", role) === "none") {
+    throw new Error("Anda tidak memiliki akses ke Hutang");
+  }
+}
 
 export async function createDebt(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
+  assertCanEdit(member.role);
 
   const name = formData.get("name") as string;
   const amount = parseFloat(formData.get("amount") as string);
@@ -33,6 +41,7 @@ export async function createDebt(formData: FormData) {
 export async function deleteDebt(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
+  assertCanEdit(member.role);
   const id = formData.get("id") as string;
   await prisma.debt.delete({ where: { id, familyId: member.familyId } });
   revalidatePath("/dashboard/debts");
@@ -43,6 +52,7 @@ export async function payDebt(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!member || !user) throw new Error("Unauthorized");
+  assertCanEdit(member.role);
 
   const id = formData.get("id") as string;
   const walletId = formData.get("walletId") as string;

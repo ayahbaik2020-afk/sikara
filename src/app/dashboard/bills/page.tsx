@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, CheckCircle2, Receipt } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 const recurrenceLabels: Record<string, string> = {
   ONCE: "Sekali",
@@ -18,6 +20,9 @@ const recurrenceLabels: Record<string, string> = {
 export default async function BillsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  if (getAccess("bills", member.role) === "none") {
+    return <AccessDenied moduleName="Tagihan" />;
+  }
 
   const [wallets, bills] = await Promise.all([
     prisma.wallet.findMany({

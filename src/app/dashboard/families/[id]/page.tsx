@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { removeMember } from "@/features/family/actions";
+import { removeMember, updateMemberRole } from "@/features/family/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -86,24 +86,45 @@ export default async function FamilyDetailPage({
                       {member.role === "ADMIN" ? (
                         <Shield className="size-3" />
                       ) : null}
-                      {member.role === "ADMIN" ? "Admin" : "Anggota"}
+                      {{ ADMIN: "Admin", AYAH: "Ayah", IBU: "Ibu", ANAK: "Anak" }[member.role]}
                     </Badge>
                   </div>
                 </div>
-                {isAdmin && member.profileId !== user.id && (
-                  <form action={removeMember}>
-                    <input type="hidden" name="memberId" value={member.id} />
-                    <input type="hidden" name="familyId" value={id} />
-                    <Button
-                      type="submit"
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="size-4" />
-                      Hapus
-                    </Button>
-                  </form>
-                )}
+                <div className="flex items-center gap-2">
+                  {isAdmin && member.profileId !== user.id && (
+                    <form action={updateMemberRole} className="flex items-center gap-2">
+                      <input type="hidden" name="memberId" value={member.id} />
+                      <input type="hidden" name="familyId" value={id} />
+                      <select
+                        name="role"
+                        defaultValue={member.role}
+                        className="flex h-8 items-center rounded-lg border border-input bg-transparent px-2 py-1 text-xs"
+                      >
+                        <option value="ADMIN">Admin</option>
+                        <option value="AYAH">Ayah</option>
+                        <option value="IBU">Ibu</option>
+                        <option value="ANAK">Anak</option>
+                      </select>
+                      <Button type="submit" size="sm" variant="outline">
+                        Simpan
+                      </Button>
+                    </form>
+                  )}
+                  {isAdmin && member.profileId !== user.id && (
+                    <form action={removeMember}>
+                      <input type="hidden" name="memberId" value={member.id} />
+                      <input type="hidden" name="familyId" value={id} />
+                      <Button
+                        type="submit"
+                        variant="destructive"
+                        size="sm"
+                      >
+                        <Trash2 className="size-4" />
+                        Hapus
+                      </Button>
+                    </form>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -30,7 +30,9 @@ enum WalletType {
 
 enum FamilyRole {
   ADMIN
-  MEMBER
+  AYAH
+  IBU
+  ANAK
 }
 
 model Profile {
@@ -74,7 +76,7 @@ model Family {
 
 model FamilyMember {
   id        String     @id @default(uuid())
-  role      FamilyRole @default(MEMBER)
+  role      FamilyRole @default(ANAK)
   joinedAt  DateTime   @default(now())
 
   profileId String

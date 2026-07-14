@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/helpers/audit";
+import { getAccess } from "@/lib/helpers/access";
 import { randomUUID } from "crypto";
 
 export async function createTransfer(formData: FormData) {
@@ -14,6 +15,9 @@ export async function createTransfer(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!member || !user) throw new Error("Unauthorized");
+  if (getAccess("transfer", member.role) === "none") {
+    throw new Error("Anda tidak memiliki akses untuk transfer");
+  }
 
   const fromWalletId = formData.get("fromWalletId") as string;
   const toWalletId = formData.get("toWalletId") as string;

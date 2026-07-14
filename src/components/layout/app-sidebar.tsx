@@ -37,57 +37,69 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 import { createClient } from "@/lib/supabase/client"
+import { getAccess } from "@/lib/helpers/access"
 
 const navGroups = [
   {
     label: "Umum",
     items: [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-      { title: "Notifikasi", url: "/dashboard/notifications", icon: Bell },
-      { title: "Laporan", url: "/dashboard/reports", icon: BarChart3 },
+      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, module: "dashboard" },
+      { title: "Notifikasi", url: "/dashboard/notifications", icon: Bell, module: "notifications" },
+      { title: "Laporan", url: "/dashboard/reports", icon: BarChart3, module: "reports" },
     ],
   },
   {
     label: "Transaksi",
     items: [
-      { title: "Pemasukan", url: "/dashboard/income", icon: TrendingUp },
-      { title: "Pengeluaran", url: "/dashboard/expense", icon: TrendingDown },
-      { title: "Transfer", url: "/dashboard/transfer", icon: ArrowLeftRight },
+      { title: "Pemasukan", url: "/dashboard/income", icon: TrendingUp, module: "income" },
+      { title: "Pengeluaran", url: "/dashboard/expense", icon: TrendingDown, module: "expense" },
+      { title: "Transfer", url: "/dashboard/transfer", icon: ArrowLeftRight, module: "transfer" },
     ],
   },
   {
     label: "Perencanaan",
     items: [
-      { title: "Tagihan", url: "/dashboard/bills", icon: Receipt },
-      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyBank },
-      { title: "Aset", url: "/dashboard/assets", icon: Home },
-      { title: "Investasi", url: "/dashboard/investments", icon: LineChart },
-      { title: "Hutang", url: "/dashboard/debts", icon: HandCoins },
-      { title: "Piutang", url: "/dashboard/receivables", icon: HandCoins },
+      { title: "Tagihan", url: "/dashboard/bills", icon: Receipt, module: "bills" },
+      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyBank, module: "savings" },
+      { title: "Aset", url: "/dashboard/assets", icon: Home, module: "assets" },
+      { title: "Investasi", url: "/dashboard/investments", icon: LineChart, module: "investments" },
+      { title: "Hutang", url: "/dashboard/debts", icon: HandCoins, module: "debts" },
+      { title: "Piutang", url: "/dashboard/receivables", icon: HandCoins, module: "receivables" },
     ],
   },
   {
     label: "Master Data",
     items: [
-      { title: "Kategori", url: "/dashboard/categories", icon: Tags },
-      { title: "Dompet", url: "/dashboard/wallets", icon: Wallet },
+      { title: "Kategori", url: "/dashboard/categories", icon: Tags, module: "categories" },
+      { title: "Dompet", url: "/dashboard/wallets", icon: Wallet, module: "wallets" },
     ],
   },
   {
     label: "Lainnya",
     items: [
-      { title: "Keluarga", url: "/dashboard/families/", icon: Users },
-      { title: "Audit Log", url: "/dashboard/audit-log", icon: History },
-      { title: "Backup & Restore", url: "/dashboard/backup", icon: DatabaseBackup },
-      { title: "Pengaturan", url: "/dashboard/settings", icon: Settings },
+      { title: "Keluarga", url: "/dashboard/families/", icon: Users, module: "families" },
+      { title: "Audit Log", url: "/dashboard/audit-log", icon: History, module: "auditLog" },
+      { title: "Backup & Restore", url: "/dashboard/backup", icon: DatabaseBackup, module: "backup" },
+      { title: "Pengaturan", url: "/dashboard/settings", icon: Settings, module: "settings" },
     ],
   },
 ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  role,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { role: string }) {
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
+
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => getAccess(item.module as never, role) !== "none"),
+    }))
+    .filter((group) => group.items.length > 0)
+
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -112,7 +124,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {navGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             <SidebarGroupContent>

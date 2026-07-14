@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { logAudit } from "@/lib/helpers/audit";
+import { getAccess } from "@/lib/helpers/access";
 
 /**
  * Restore data dari file backup JSON. HANYA bisa restore ke keluarga yang
@@ -15,6 +16,9 @@ import { logAudit } from "@/lib/helpers/audit";
 export async function restoreBackup(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
+  if (getAccess("backup", member.role) === "none") {
+    throw new Error("Anda tidak memiliki akses untuk restore data");
+  }
 
   const file = formData.get("file") as File;
   if (!file || file.size === 0) throw new Error("File backup wajib dipilih");

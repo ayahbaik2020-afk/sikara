@@ -3,10 +3,15 @@ import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { Card, CardContent } from "@/components/ui/card";
 import { History } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 export default async function AuditLogPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  if (getAccess("auditLog", member.role) === "none") {
+    return <AccessDenied moduleName="Audit Log" />;
+  }
 
   const logs = await prisma.auditLog.findMany({
     where: { familyId: member.familyId },

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Wallet } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { getAccess } from "@/lib/helpers/access";
 
 const typeLabels: Record<string, string> = {
   CASH: "Tunai",
@@ -23,6 +24,7 @@ const typeVariants: Record<string, "default" | "secondary" | "outline"> = {
 export default async function WalletsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  const canEdit = getAccess("wallets", member.role) === "full";
 
   const wallets = await prisma.wallet.findMany({
     where: { familyId: member.familyId },
@@ -33,42 +35,44 @@ export default async function WalletsPage() {
     <div className="mx-auto max-w-3xl space-y-6 p-4 pt-6">
       <h1 className="text-2xl font-bold">Dompet</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Tambah Dompet</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={createWallet} className="flex flex-wrap gap-2">
-            <Input
-              name="name"
-              placeholder="Nama dompet"
-              required
-              className="min-w-[160px] flex-1"
-            />
-            <select
-              name="type"
-              required
-              className="flex h-8 min-w-[120px] items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              <option value="CASH">Tunai</option>
-              <option value="BANK">Bank</option>
-              <option value="E_WALLET">E-Wallet</option>
-            </select>
-            <Input
-              name="balance"
-              type="number"
-              step="0.01"
-              defaultValue="0"
-              placeholder="Saldo awal"
-              className="w-28"
-            />
-            <Button type="submit">
-              <Plus className="size-4" />
-              Tambah
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {canEdit && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tambah Dompet</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form action={createWallet} className="flex flex-wrap gap-2">
+              <Input
+                name="name"
+                placeholder="Nama dompet"
+                required
+                className="min-w-[160px] flex-1"
+              />
+              <select
+                name="type"
+                required
+                className="flex h-8 min-w-[120px] items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <option value="CASH">Tunai</option>
+                <option value="BANK">Bank</option>
+                <option value="E_WALLET">E-Wallet</option>
+              </select>
+              <Input
+                name="balance"
+                type="number"
+                step="0.01"
+                defaultValue="0"
+                placeholder="Saldo awal"
+                className="w-28"
+              />
+              <Button type="submit">
+                <Plus className="size-4" />
+                Tambah
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         {wallets.length === 0 && (
@@ -97,13 +101,15 @@ export default async function WalletsPage() {
                 <Wallet className="size-5 text-muted-foreground" />
                 Rp {Number(w.balance).toLocaleString("id-ID")}
               </div>
-              <form action={deleteWallet} className="mt-3">
-                <input type="hidden" name="id" value={w.id} />
-                <Button type="submit" variant="destructive" size="sm">
-                  <Trash2 className="size-4" />
-                  Hapus
-                </Button>
-              </form>
+              {canEdit && (
+                <form action={deleteWallet} className="mt-3">
+                  <input type="hidden" name="id" value={w.id} />
+                  <Button type="submit" variant="destructive" size="sm">
+                    <Trash2 className="size-4" />
+                    Hapus
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         ))}

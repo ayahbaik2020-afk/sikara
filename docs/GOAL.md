@@ -24,7 +24,7 @@ fungsi CRUD yang benar-benar jalan (bukan cuma server action tanpa UI).
 - [x] Notifikasi (dihitung on-the-fly: tagihan lewat/mendekati jatuh tempo, target tercapai, hutang/piutang lewat jatuh tempo) — selesai (Sprint 14)
 - [x] Audit Log (transaksi, transfer, bayar tagihan/hutang, tabungan, terima piutang) — selesai (Sprint 14)
 - [x] Backup & Restore (export/import JSON, hanya untuk keluarga sendiri) — selesai (Sprint 15)
-- [ ] Role granular (Ayah/Ibu/Anak) vs schema saat ini (ADMIN/MEMBER)
+- [x] Role granular (Ayah/Ibu/Anak) — selesai (Sprint 16): schema FamilyRole (ADMIN/AYAH/IBU/ANAK), matrix akses `lib/helpers/access.ts`, guard di halaman & server action, UI kelola role di halaman Keluarga
 - [x] Perbaiki deleteTransfer — sudah dirapikan (hapus dead code, tetap pakai deteksi deskripsi tapi lebih bersih)
 
 ## Urutan pengerjaan

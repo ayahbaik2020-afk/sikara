@@ -3,10 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
+import { getAccess } from "@/lib/helpers/access";
+
+function assertCanEdit(role: string) {
+  if (getAccess("assets", role) !== "full") {
+    throw new Error("Anda tidak memiliki akses untuk mengubah data aset");
+  }
+}
 
 export async function createAsset(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
+  assertCanEdit(member.role);
 
   const name = formData.get("name") as string;
   const category = (formData.get("category") as string) || "OTHER";
@@ -37,6 +45,7 @@ export async function createAsset(formData: FormData) {
 export async function updateAssetValue(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
+  assertCanEdit(member.role);
 
   const id = formData.get("id") as string;
   const currentValue = parseFloat(formData.get("currentValue") as string);
@@ -53,6 +62,7 @@ export async function updateAssetValue(formData: FormData) {
 export async function deleteAsset(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
+  assertCanEdit(member.role);
 
   const id = formData.get("id") as string;
   await prisma.asset.delete({ where: { id, familyId: member.familyId } });

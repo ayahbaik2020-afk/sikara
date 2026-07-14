@@ -6,10 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeftRight, Trash2 } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 export default async function TransferPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  if (getAccess("transfer", member.role) === "none") {
+    return <AccessDenied moduleName="Transfer" />;
+  }
 
   const [wallets, transactions] = await Promise.all([
     prisma.wallet.findMany({

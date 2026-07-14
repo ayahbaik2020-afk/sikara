@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
+import { getAccess } from "@/lib/helpers/access";
 
 export async function GET() {
   const member = await getCurrentFamilyMember();
-  if (!member) {
+  if (!member || getAccess("backup", member.role) === "none") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

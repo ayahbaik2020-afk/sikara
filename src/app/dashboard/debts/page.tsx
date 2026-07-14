@@ -7,10 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { HandCoins, Trash2, Plus } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
+import { getAccess } from "@/lib/helpers/access";
 
 export default async function DebtsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
+  if (getAccess("debts", member.role) === "none") {
+    return <AccessDenied moduleName="Hutang" />;
+  }
 
   const [wallets, debts] = await Promise.all([
     prisma.wallet.findMany({
