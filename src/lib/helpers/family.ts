@@ -10,9 +10,19 @@ export async function getCurrentFamilyMember() {
 
   const member = await prisma.familyMember.findFirst({
     where: { profileId: user.id },
-    include: { family: true },
+    include: { family: true, profile: true },
     orderBy: { joinedAt: "asc" },
   });
 
   return member;
+}
+
+export async function getCurrentProfile() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  return prisma.profile.findUnique({ where: { id: user.id } });
 }

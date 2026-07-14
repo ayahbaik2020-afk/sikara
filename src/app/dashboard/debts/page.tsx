@@ -13,7 +13,7 @@ import { getAccess } from "@/lib/helpers/access";
 export default async function DebtsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("debts", member.role) === "none") {
+  if (getAccess("debts", member.systemRole) === "none") {
     return <AccessDenied moduleName="Hutang" />;
   }
 

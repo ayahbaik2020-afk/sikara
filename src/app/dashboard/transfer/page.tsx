@@ -12,7 +12,7 @@ import { getAccess } from "@/lib/helpers/access";
 export default async function TransferPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("transfer", member.role) === "none") {
+  if (getAccess("transfer", member.systemRole) === "none") {
     return <AccessDenied moduleName="Transfer" />;
   }
 

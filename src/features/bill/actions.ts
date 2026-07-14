@@ -16,7 +16,7 @@ function assertCanEdit(role: string) {
 export async function createBill(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const name = formData.get("name") as string;
   const amount = parseFloat(formData.get("amount") as string);
@@ -46,7 +46,7 @@ export async function createBill(formData: FormData) {
 export async function deleteBill(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
 
@@ -71,7 +71,7 @@ export async function payBill(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!member || !user) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
   const walletId = formData.get("walletId") as string;

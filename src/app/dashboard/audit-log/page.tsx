@@ -9,7 +9,7 @@ import { getAccess } from "@/lib/helpers/access";
 export default async function AuditLogPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("auditLog", member.role) === "none") {
+  if (getAccess("auditLog", member.systemRole) === "none") {
     return <AccessDenied moduleName="Audit Log" />;
   }
 

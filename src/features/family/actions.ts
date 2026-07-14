@@ -20,7 +20,8 @@ export async function createFamily(formData: FormData) {
       members: {
         create: {
           profileId: user.id,
-          role: "ADMIN",
+          systemRole: "FAMILY_ADMIN",
+          relationship: "AYAH",
         },
       },
     },
@@ -59,6 +60,8 @@ export async function joinFamily(formData: FormData) {
     data: {
       profileId: user.id,
       familyId: family.id,
+      systemRole: "MEMBER",
+      relationship: "ANAK",
     },
   });
 
@@ -88,8 +91,8 @@ export async function removeMember(formData: FormData) {
     },
   });
 
-  if (currentUserMember?.role !== "ADMIN") {
-    throw new Error("Hanya admin yang dapat menghapus anggota");
+  if (currentUserMember?.systemRole !== "FAMILY_ADMIN") {
+    throw new Error("Hanya Family Admin yang dapat menghapus anggota");
   }
 
   if (member.profileId === user.id) {
@@ -101,7 +104,12 @@ export async function removeMember(formData: FormData) {
   revalidatePath(`/dashboard/families/${familyId}`);
 }
 
-export async function updateMemberRole(formData: FormData) {
+/**
+ * Admin mengubah HUBUNGAN KELUARGA (Ayah/Ibu/Anak) anggota — bukan system
+ * role. Perpindahan Family Admin sendiri adalah wewenang Super Admin
+ * (Tahap E, belum diimplementasi).
+ */
+export async function updateMemberRelationship(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -110,24 +118,36 @@ export async function updateMemberRole(formData: FormData) {
 
   const memberId = formData.get("memberId") as string;
   const familyId = formData.get("familyId") as string;
-  const newRole = formData.get("role") as string;
+  const newRelationship = formData.get("relationship") as string;
 
   const currentUserMember = await prisma.familyMember.findUnique({
     where: { profileId_familyId: { profileId: user.id, familyId } },
   });
-  if (currentUserMember?.role !== "ADMIN") {
-    throw new Error("Hanya admin yang dapat mengubah role anggota");
+  if (currentUserMember?.systemRole !== "FAMILY_ADMIN") {
+    throw new Error("Hanya Family Admin yang dapat mengubah hubungan keluarga");
   }
 
   const target = await prisma.familyMember.findUnique({ where: { id: memberId } });
   if (!target) throw new Error("Anggota tidak ditemukan");
-  if (target.profileId === user.id) {
-    throw new Error("Admin tidak bisa mengubah role diri sendiri di sini");
+
+  if (newRelationship === "AYAH" || newRelationship === "IBU") {
+    const clash = await prisma.familyMember.findFirst({
+      where: {
+        familyId,
+        relationship: newRelationship as never,
+        id: { not: memberId },
+      },
+    });
+    if (clash) {
+      throw new Error(
+        `Sudah ada anggota dengan hubungan "${newRelationship === "AYAH" ? "Ayah" : "Ibu"}" di keluarga ini. Maksimal 1 Ayah dan 1 Ibu per keluarga.`
+      );
+    }
   }
 
   await prisma.familyMember.update({
     where: { id: memberId },
-    data: { role: newRole as never },
+    data: { relationship: newRelationship as never },
   });
 
   revalidatePath(`/dashboard/families/${familyId}`);

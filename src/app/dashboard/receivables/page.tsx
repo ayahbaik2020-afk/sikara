@@ -13,7 +13,7 @@ import { getAccess } from "@/lib/helpers/access";
 export default async function ReceivablesPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("receivables", member.role) === "none") {
+  if (getAccess("receivables", member.systemRole) === "none") {
     return <AccessDenied moduleName="Piutang" />;
   }
 

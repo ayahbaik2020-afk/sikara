@@ -25,7 +25,7 @@ const typeLabels: Record<string, string> = {
 export default async function InvestmentsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  const access = getAccess("investments", member.role);
+  const access = getAccess("investments", member.systemRole);
   if (access === "none") return <AccessDenied moduleName="Investasi" />;
   const canEdit = access === "full";
 

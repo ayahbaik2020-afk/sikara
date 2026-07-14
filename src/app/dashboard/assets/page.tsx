@@ -20,7 +20,7 @@ const categoryLabels: Record<string, string> = {
 export default async function AssetsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  const access = getAccess("assets", member.role);
+  const access = getAccess("assets", member.systemRole);
   if (access === "none") return <AccessDenied moduleName="Aset" />;
   const canEdit = access === "full";
 

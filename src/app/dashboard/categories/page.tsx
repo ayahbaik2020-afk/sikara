@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+import { AccessDenied } from "@/components/layout/access-denied";
 import { getAccess } from "@/lib/helpers/access";
 
 export default async function CategoriesPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  const canEdit = getAccess("categories", member.role) === "full";
+  const canEdit = getAccess("categories", member.systemRole) === "full";
+  if (!canEdit) return <AccessDenied moduleName="Kategori" />;
 
   const categories = await prisma.category.findMany({
     where: { familyId: member.familyId },

@@ -10,7 +10,7 @@ import { getAccess } from "@/lib/helpers/access";
 export default async function BackupPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("backup", member.role) === "none") {
+  if (getAccess("backup", member.systemRole) === "none") {
     return <AccessDenied moduleName="Backup & Restore" />;
   }
 

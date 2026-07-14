@@ -12,7 +12,7 @@ import { getAccess } from "@/lib/helpers/access";
 export default async function SettingsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("settings", member.role) === "none") {
+  if (getAccess("settings", member.systemRole) === "none") {
     return <AccessDenied moduleName="Pengaturan" />;
   }
 

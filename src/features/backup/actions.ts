@@ -16,7 +16,7 @@ import { getAccess } from "@/lib/helpers/access";
 export async function restoreBackup(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  if (getAccess("backup", member.role) === "none") {
+  if (getAccess("backup", member.systemRole) === "none") {
     throw new Error("Anda tidak memiliki akses untuk restore data");
   }
 

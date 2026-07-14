@@ -28,22 +28,38 @@ enum WalletType {
   E_WALLET
 }
 
-enum FamilyRole {
-  ADMIN
+enum SystemRole {
+  FAMILY_ADMIN
+  MEMBER
+}
+
+enum Relationship {
   AYAH
   IBU
   ANAK
 }
 
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FamilyStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Profile {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  username  String   @unique
-  name      String?
-  avatarUrl String?
-  role      Role     @default(MEMBER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String     @id @default(uuid())
+  email         String     @unique
+  username      String     @unique
+  name          String?
+  avatarUrl     String?
+  role          Role       @default(MEMBER)
+  isSuperAdmin  Boolean    @default(false)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   families     FamilyMember[]
   transactions Transaction[]
@@ -54,6 +70,7 @@ model Profile {
 model Family {
   id         String         @id @default(uuid())
   name       String
+  status     FamilyStatus   @default(ACTIVE)
   inviteCode String         @unique @default(cuid())
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
@@ -75,9 +92,10 @@ model Family {
 }
 
 model FamilyMember {
-  id        String     @id @default(uuid())
-  role      FamilyRole @default(ANAK)
-  joinedAt  DateTime   @default(now())
+  id           String       @id @default(uuid())
+  systemRole   SystemRole   @default(MEMBER)
+  relationship Relationship @default(ANAK)
+  joinedAt     DateTime     @default(now())
 
   profileId String
   profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)

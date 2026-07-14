@@ -299,7 +299,7 @@ export default async function DashboardPage() {
                   <Card className="transition-colors hover:bg-accent/50">
                     <CardContent className="flex items-center justify-between p-4">
                       <p className="font-medium">{m.family.name}</p>
-                      <span className="text-xs text-muted-foreground">{m.role === "ADMIN" ? "Admin" : "Anggota"}</span>
+                      <span className="text-xs text-muted-foreground">{m.systemRole === "FAMILY_ADMIN" ? "Admin" : "Anggota"}</span>
                     </CardContent>
                   </Card>
                 </Link>

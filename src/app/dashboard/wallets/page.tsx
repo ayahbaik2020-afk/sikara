@@ -24,7 +24,7 @@ const typeVariants: Record<string, "default" | "secondary" | "outline"> = {
 export default async function WalletsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  const canEdit = getAccess("wallets", member.role) === "full";
+  const canEdit = getAccess("wallets", member.systemRole) === "full";
 
   const wallets = await prisma.wallet.findMany({
     where: { familyId: member.familyId },

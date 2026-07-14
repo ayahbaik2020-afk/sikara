@@ -16,7 +16,7 @@ function assertCanEdit(role: string) {
 export async function createReceivable(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const name = formData.get("name") as string;
   const amount = parseFloat(formData.get("amount") as string);
@@ -41,7 +41,7 @@ export async function createReceivable(formData: FormData) {
 export async function deleteReceivable(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
   const id = formData.get("id") as string;
   await prisma.receivable.delete({ where: { id, familyId: member.familyId } });
   revalidatePath("/dashboard/receivables");
@@ -52,7 +52,7 @@ export async function receivePayment(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!member || !user) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
   const walletId = formData.get("walletId") as string;

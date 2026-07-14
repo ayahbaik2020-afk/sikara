@@ -14,7 +14,7 @@ function assertCanEdit(role: string) {
 export async function createAsset(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const name = formData.get("name") as string;
   const category = (formData.get("category") as string) || "OTHER";
@@ -45,7 +45,7 @@ export async function createAsset(formData: FormData) {
 export async function updateAssetValue(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
   const currentValue = parseFloat(formData.get("currentValue") as string);
@@ -62,7 +62,7 @@ export async function updateAssetValue(formData: FormData) {
 export async function deleteAsset(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
   await prisma.asset.delete({ where: { id, familyId: member.familyId } });

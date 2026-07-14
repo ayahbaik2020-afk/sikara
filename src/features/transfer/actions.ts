@@ -15,7 +15,7 @@ export async function createTransfer(formData: FormData) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!member || !user) throw new Error("Unauthorized");
-  if (getAccess("transfer", member.role) === "none") {
+  if (getAccess("transfer", member.systemRole) === "none") {
     throw new Error("Anda tidak memiliki akses untuk transfer");
   }
 

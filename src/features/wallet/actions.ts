@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentFamilyMember } from "@/lib/helpers/family";
 import { getAccess } from "@/lib/helpers/access";
 
-function assertCanEdit(role: string) {
-  if (getAccess("wallets", role) !== "full") {
+function assertCanEdit(systemRole: string) {
+  if (getAccess("wallets", systemRole) !== "full") {
     throw new Error("Anda tidak memiliki akses untuk mengubah dompet");
   }
 }
@@ -14,7 +14,7 @@ function assertCanEdit(role: string) {
 export async function createWallet(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const name = formData.get("name") as string;
   const type = formData.get("type") as "CASH" | "BANK" | "E_WALLET";
@@ -39,7 +39,7 @@ export async function createWallet(formData: FormData) {
 export async function updateWallet(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
@@ -58,7 +58,7 @@ export async function updateWallet(formData: FormData) {
 export async function deleteWallet(formData: FormData) {
   const member = await getCurrentFamilyMember();
   if (!member) throw new Error("Unauthorized");
-  assertCanEdit(member.role);
+  assertCanEdit(member.systemRole);
 
   const id = formData.get("id") as string;
 

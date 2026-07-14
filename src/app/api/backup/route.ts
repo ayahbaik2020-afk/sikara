@@ -5,7 +5,7 @@ import { getAccess } from "@/lib/helpers/access";
 
 export async function GET() {
   const member = await getCurrentFamilyMember();
-  if (!member || getAccess("backup", member.role) === "none") {
+  if (!member || getAccess("backup", member.systemRole) === "none") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

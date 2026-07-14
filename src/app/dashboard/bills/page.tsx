@@ -20,7 +20,7 @@ const recurrenceLabels: Record<string, string> = {
 export default async function BillsPage() {
   const member = await getCurrentFamilyMember();
   if (!member) return <NoFamilyPrompt />;
-  if (getAccess("bills", member.role) === "none") {
+  if (getAccess("bills", member.systemRole) === "none") {
     return <AccessDenied moduleName="Tagihan" />;
   }
 

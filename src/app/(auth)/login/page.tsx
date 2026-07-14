@@ -87,7 +87,7 @@ export default function LoginPage() {
 
           <div className="card-face">
             <div className="brand-icon">
-              <Image src="/logo-sikaraman.png" alt="SIKARA" width={32} height={32} className="size-8" />
+              <Image src="/logo-sikaraman.png" alt="SIKARA" width={44} height={44} className="brand-icon-img" />
             </div>
             <h4>SIKARA</h4>
             <small>Sistem Keuangan Keluarga</small>
@@ -217,11 +217,24 @@ export default function LoginPage() {
         }
         .login-shell.is-open .card-face { opacity: 1; transform: translateY(0); transition-delay: .22s; }
         .brand-icon {
-          width: 52px; height: 52px; margin: 0 auto 12px;
-          border-radius: 15px;
-          background: linear-gradient(135deg, #22d3ee, #0d9488);
+          width: 72px; height: 72px; margin: 0 auto 22px;
+          padding: 14px;
+          border-radius: 24px;
+          background: linear-gradient(135deg, #10b981, #22d3ee);
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 8px 20px rgba(34,211,238,.35);
+          box-shadow: 0 12px 28px rgba(16,185,129,.32), 0 4px 12px rgba(34,211,238,.22);
+          opacity: 0;
+          transform: scale(.82);
+        }
+        .login-shell.is-open .brand-icon {
+          animation: brand-icon-in .55s cubic-bezier(.2,.9,.15,1.05) .3s forwards;
+        }
+        @keyframes brand-icon-in {
+          to { opacity: 1; transform: scale(1); }
+        }
+        .brand-icon-img {
+          width: 100%; height: 100%;
+          object-fit: contain;
         }
         .card-face h4 {
           font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 1.08rem;
@@ -273,6 +286,7 @@ export default function LoginPage() {
         @media (prefers-reduced-motion: reduce) {
           .login-shell { transition-duration: .01ms !important; }
           .login-shell::before { animation-duration: .01ms !important; }
+          .login-shell.is-open .brand-icon { animation-duration: .01ms !important; opacity: 1; transform: none; }
         }
       `}</style>
     </div>
