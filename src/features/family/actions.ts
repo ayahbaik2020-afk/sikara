@@ -31,6 +31,38 @@ export async function createFamily(formData: FormData) {
   redirect("/dashboard");
 }
 
+/**
+ * Super Admin membuat Family baru TANPA otomatis menjadi anggotanya
+ * (Super Admin mengelola lintas family, bukan berpartisipasi di
+ * dalamnya). Family Admin untuk family ini ditunjuk belakangan lewat
+ * halaman /dashboard/super (TODO: fitur assign Family Admin — lihat
+ * laporan refactor).
+ */
+export async function createFamilyAsSuperAdmin(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const requester = await prisma.profile.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+  if (requester?.role !== "SUPER_ADMIN") {
+    throw new Error("Hanya Super Admin yang dapat menggunakan aksi ini");
+  }
+
+  const name = formData.get("name") as string;
+  if (!name || name.trim().length === 0) {
+    throw new Error("Nama keluarga wajib diisi");
+  }
+
+  await prisma.family.create({ data: { name: name.trim() } });
+
+  revalidatePath("/dashboard/super");
+}
+
 export async function joinFamily(formData: FormData) {
   const supabase = await createClient();
   const {

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import type { FamilyMember, Wallet, Transaction } from "@/generated/prisma/client";
 import { createFamily, joinFamily } from "@/features/family/actions";
+import { isSuperAdmin } from "@/lib/helpers/access";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -18,10 +19,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 4 && hour < 11) return "Selamat Pagi";
+  if (hour >= 11 && hour < 15) return "Selamat Siang";
+  if (hour >= 15 && hour < 18) return "Selamat Sore";
+  return "Selamat Malam";
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const profile = await prisma.profile.findUnique({
+    where: { id: user.id },
+    select: { role: true },
+  });
+  if (profile && isSuperAdmin(profile.role)) redirect("/dashboard/super");
 
   let memberships: (FamilyMember & { family: { id: string; name: string } })[] = [];
   let wallets: Wallet[] = [];
@@ -95,9 +110,9 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{getGreeting()}</h1>
         <p className="text-sm text-muted-foreground">
-          Selamat datang, {user.user_metadata?.name || user.email}
+          Halo, {user.user_metadata?.name || user.email} 👋
         </p>
       </div>
 

@@ -12,11 +12,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  ADMIN
-  MEMBER
-}
-
 enum CategoryType {
   INCOME
   EXPENSE
@@ -28,7 +23,11 @@ enum WalletType {
   E_WALLET
 }
 
+// Satu-satunya enum role di seluruh aplikasi (sesuai SIKARA Master Refactor Prompt).
+// - SUPER_ADMIN: role global, dipakai lewat Profile.role. Tidak terikat family manapun.
+// - FAMILY_ADMIN / MEMBER: role per-family, dipakai lewat FamilyMember.systemRole.
 enum SystemRole {
+  SUPER_ADMIN
   FAMILY_ADMIN
   MEMBER
 }
@@ -55,8 +54,10 @@ model Profile {
   username      String     @unique
   name          String?
   avatarUrl     String?
-  role          Role       @default(MEMBER)
-  isSuperAdmin  Boolean    @default(false)
+  // Role global user (di luar konteks family). Nilai efektif untuk kebanyakan
+  // user adalah MEMBER; hanya diisi SUPER_ADMIN untuk akun operator pusat.
+  // Role di dalam sebuah family tetap ditentukan oleh FamilyMember.systemRole.
+  role          SystemRole @default(MEMBER)
   status        UserStatus @default(ACTIVE)
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt

@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PiggyBank, Plus, Trash2, Target } from "lucide-react";
+import { Plus, Trash2, Target } from "lucide-react";
+import { PiggyChicken } from "@/components/icons/piggy-chicken";
 import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
 
 export default async function SavingsPage() {
@@ -76,7 +77,7 @@ export default async function SavingsPage() {
                       {target ? (
                         <Target className="size-4 text-muted-foreground" />
                       ) : (
-                        <PiggyBank className="size-4 text-muted-foreground" />
+                        <PiggyChicken className="size-4 text-muted-foreground" />
                       )}
                       {g.name}
                       {isDone && <Badge>Tercapai 🎉</Badge>}
@@ -134,7 +135,7 @@ export default async function SavingsPage() {
                         className="h-8 w-32"
                       />
                       <Button type="submit" size="sm">
-                        <PiggyBank className="size-4" />
+                        <PiggyChicken className="size-4" />
                         Tabung
                       </Button>
                     </form>

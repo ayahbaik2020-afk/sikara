@@ -15,7 +15,6 @@ import {
   LogOut,
   ArrowLeftRight,
   Receipt,
-  PiggyBank,
   Home,
   LineChart,
   HandCoins,
@@ -23,6 +22,7 @@ import {
   Bell,
   History,
   DatabaseBackup,
+  ShieldCheck,
 } from "lucide-react"
 import {
   Sidebar,
@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sidebar"
 import { createClient } from "@/lib/supabase/client"
 import { getAccess } from "@/lib/helpers/access"
+import { PiggyChicken } from "@/components/icons/piggy-chicken"
 
 const navGroups = [
   {
@@ -60,7 +61,7 @@ const navGroups = [
     label: "Perencanaan",
     items: [
       { title: "Tagihan", url: "/dashboard/bills", icon: Receipt, module: "bills" },
-      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyBank, module: "savings" },
+      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyChicken, module: "savings" },
       { title: "Aset", url: "/dashboard/assets", icon: Home, module: "assets" },
       { title: "Investasi", url: "/dashboard/investments", icon: LineChart, module: "investments" },
       { title: "Hutang", url: "/dashboard/debts", icon: HandCoins, module: "debts" },
@@ -85,10 +86,18 @@ const navGroups = [
   },
 ]
 
+const superAdminGroup = {
+  label: "Super Admin",
+  items: [
+    { title: "Kelola Family", url: "/dashboard/super", icon: ShieldCheck, module: "super" },
+  ],
+}
+
 export function AppSidebar({
   role,
+  superAdmin,
   ...props
-}: React.ComponentProps<typeof Sidebar> & { role: string }) {
+}: React.ComponentProps<typeof Sidebar> & { role: string; superAdmin?: boolean }) {
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
@@ -99,6 +108,7 @@ export function AppSidebar({
       items: group.items.filter((item) => getAccess(item.module as never, role) !== "none"),
     }))
     .filter((group) => group.items.length > 0)
+    .concat(superAdmin ? [superAdminGroup] : [])
 
 
   const handleLogout = async () => {

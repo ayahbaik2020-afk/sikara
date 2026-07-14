@@ -1,0 +1,605 @@
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index dbaf501..f445a26 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -12,11 +12,6 @@ datasource db {
+   provider = "postgresql"
+ }
+ 
+-enum Role {
+-  ADMIN
+-  MEMBER
+-}
+-
+ enum CategoryType {
+   INCOME
+   EXPENSE
+@@ -28,7 +23,11 @@ enum WalletType {
+   E_WALLET
+ }
+ 
++// Satu-satunya enum role di seluruh aplikasi (sesuai SIKARA Master Refactor Prompt).
++// - SUPER_ADMIN: role global, dipakai lewat Profile.role. Tidak terikat family manapun.
++// - FAMILY_ADMIN / MEMBER: role per-family, dipakai lewat FamilyMember.systemRole.
+ enum SystemRole {
++  SUPER_ADMIN
+   FAMILY_ADMIN
+   MEMBER
+ }
+@@ -55,8 +54,10 @@ model Profile {
+   username      String     @unique
+   name          String?
+   avatarUrl     String?
+-  role          Role       @default(MEMBER)
+-  isSuperAdmin  Boolean    @default(false)
++  // Role global user (di luar konteks family). Nilai efektif untuk kebanyakan
++  // user adalah MEMBER; hanya diisi SUPER_ADMIN untuk akun operator pusat.
++  // Role di dalam sebuah family tetap ditentukan oleh FamilyMember.systemRole.
++  role          SystemRole @default(MEMBER)
+   status        UserStatus @default(ACTIVE)
+   createdAt     DateTime   @default(now())
+   updatedAt     DateTime   @updatedAt
+diff --git a/src/app/dashboard/layout.tsx b/src/app/dashboard/layout.tsx
+index 6eda618..ecd27d8 100644
+--- a/src/app/dashboard/layout.tsx
++++ b/src/app/dashboard/layout.tsx
+@@ -2,7 +2,8 @@ import { cookies } from "next/headers"
+ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+ import { Separator } from "@/components/ui/separator"
+ import { AppSidebar } from "@/components/layout/app-sidebar"
+-import { getCurrentFamilyMember } from "@/lib/helpers/family"
++import { getCurrentFamilyMember, getCurrentProfile } from "@/lib/helpers/family"
++import { isSuperAdmin } from "@/lib/helpers/access"
+ 
+ export default async function DashboardLayout({
+   children,
+@@ -11,11 +12,18 @@ export default async function DashboardLayout({
+ }) {
+   const cookieStore = await cookies()
+   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"
+-  const member = await getCurrentFamilyMember()
++  // Super Admin biasanya tidak punya FamilyMember (tidak ikut family manapun),
++  // jadi role sidebar harus dicek dari dua sumber: role global (Profile.role)
++  // untuk Super Admin, dan systemRole (FamilyMember) untuk menu modul keuangan.
++  const [member, profile] = await Promise.all([
++    getCurrentFamilyMember(),
++    getCurrentProfile(),
++  ])
++  const superAdmin = profile ? isSuperAdmin(profile.role) : false
+ 
+   return (
+     <SidebarProvider defaultOpen={defaultOpen}>
+-      <AppSidebar role={member?.systemRole ?? "MEMBER"} />
++      <AppSidebar role={member?.systemRole ?? "MEMBER"} superAdmin={superAdmin} />
+       <SidebarInset>
+         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 transition-[width,height] ease-linear">
+           <div className="flex w-full items-center gap-2">
+diff --git a/src/app/dashboard/page.tsx b/src/app/dashboard/page.tsx
+index 9dd4462..a7a8499 100644
+--- a/src/app/dashboard/page.tsx
++++ b/src/app/dashboard/page.tsx
+@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
+ import { prisma } from "@/lib/prisma";
+ import type { FamilyMember, Wallet, Transaction } from "@/generated/prisma/client";
+ import { createFamily, joinFamily } from "@/features/family/actions";
++import { isSuperAdmin } from "@/lib/helpers/access";
+ import { redirect } from "next/navigation";
+ import Link from "next/link";
+ import {
+@@ -18,11 +19,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+ import { Button } from "@/components/ui/button";
+ import { Input } from "@/components/ui/input";
+ 
++function getGreeting(): string {
++  const hour = new Date().getHours();
++  if (hour >= 4 && hour < 11) return "Selamat Pagi";
++  if (hour >= 11 && hour < 15) return "Selamat Siang";
++  if (hour >= 15 && hour < 18) return "Selamat Sore";
++  return "Selamat Malam";
++}
++
+ export default async function DashboardPage() {
+   const supabase = await createClient();
+   const { data: { user } } = await supabase.auth.getUser();
+   if (!user) redirect("/login");
+ 
++  const profile = await prisma.profile.findUnique({
++    where: { id: user.id },
++    select: { role: true },
++  });
++  if (profile && isSuperAdmin(profile.role)) redirect("/dashboard/super");
++
+   let memberships: (FamilyMember & { family: { id: string; name: string } })[] = [];
+   let wallets: Wallet[] = [];
+   let totalBalance = 0;
+@@ -95,9 +110,9 @@ export default async function DashboardPage() {
+   return (
+     <div className="mx-auto max-w-5xl space-y-6">
+       <div>
+-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
++        <h1 className="text-2xl font-bold tracking-tight">{getGreeting()}</h1>
+         <p className="text-sm text-muted-foreground">
+-          Selamat datang, {user.user_metadata?.name || user.email}
++          Halo, {user.user_metadata?.name || user.email} 👋
+         </p>
+       </div>
+ 
+diff --git a/src/app/dashboard/savings/page.tsx b/src/app/dashboard/savings/page.tsx
+index 84bdd1c..95503d1 100644
+--- a/src/app/dashboard/savings/page.tsx
++++ b/src/app/dashboard/savings/page.tsx
+@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+ import { Button } from "@/components/ui/button";
+ import { Input } from "@/components/ui/input";
+ import { Badge } from "@/components/ui/badge";
+-import { PiggyBank, Plus, Trash2, Target } from "lucide-react";
++import { Plus, Trash2, Target } from "lucide-react";
++import { PiggyChicken } from "@/components/icons/piggy-chicken";
+ import { NoFamilyPrompt } from "@/components/layout/no-family-prompt";
+ 
+ export default async function SavingsPage() {
+@@ -76,7 +77,7 @@ export default async function SavingsPage() {
+                       {target ? (
+                         <Target className="size-4 text-muted-foreground" />
+                       ) : (
+-                        <PiggyBank className="size-4 text-muted-foreground" />
++                        <PiggyChicken className="size-4 text-muted-foreground" />
+                       )}
+                       {g.name}
+                       {isDone && <Badge>Tercapai 🎉</Badge>}
+@@ -134,7 +135,7 @@ export default async function SavingsPage() {
+                         className="h-8 w-32"
+                       />
+                       <Button type="submit" size="sm">
+-                        <PiggyBank className="size-4" />
++                        <PiggyChicken className="size-4" />
+                         Tabung
+                       </Button>
+                     </form>
+diff --git a/src/app/dashboard/super/page.tsx b/src/app/dashboard/super/page.tsx
+new file mode 100644
+index 0000000..42f18e2
+--- /dev/null
++++ b/src/app/dashboard/super/page.tsx
+@@ -0,0 +1,84 @@
++import { redirect } from "next/navigation";
++import { prisma } from "@/lib/prisma";
++import { getCurrentProfile } from "@/lib/helpers/family";
++import { isSuperAdmin } from "@/lib/helpers/access";
++import { createFamilyAsSuperAdmin } from "@/features/family/actions";
++import { AccessDenied } from "@/components/layout/access-denied";
++import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
++import { Button } from "@/components/ui/button";
++import { Input } from "@/components/ui/input";
++import { Users } from "lucide-react";
++
++// Area khusus Super Admin: kelola seluruh family lintas tenant.
++// Tidak memakai getAccess()/matrix modul keuangan — role SUPER_ADMIN
++// dicek langsung dari Profile.role (role global), bukan FamilyMember.
++export default async function SuperAdminPage() {
++  const profile = await getCurrentProfile();
++  if (!profile) redirect("/login");
++
++  if (!isSuperAdmin(profile.role)) {
++    return <AccessDenied moduleName="Super Admin" />;
++  }
++
++  const families = await prisma.family.findMany({
++    orderBy: { createdAt: "desc" },
++    include: {
++      _count: { select: { members: true } },
++      members: {
++        where: { systemRole: "FAMILY_ADMIN" },
++        include: { profile: { select: { name: true, username: true } } },
++        take: 1,
++      },
++    },
++  });
++
++  return (
++    <div className="space-y-6">
++      <div>
++        <h1 className="text-2xl font-semibold">Kelola Family</h1>
++        <p className="text-sm text-muted-foreground">
++          Super Admin — buat dan pantau seluruh family yang terdaftar di Sikara.
++        </p>
++      </div>
++
++      <Card>
++        <CardHeader>
++          <CardTitle className="text-base">Buat Family Baru</CardTitle>
++        </CardHeader>
++        <CardContent>
++          <form action={createFamilyAsSuperAdmin} className="flex gap-2">
++            <Input name="name" placeholder="Nama keluarga" required className="max-w-sm" />
++            <Button type="submit">Buat Family</Button>
++          </form>
++        </CardContent>
++      </Card>
++
++      <div className="space-y-3">
++        {families.length === 0 && (
++          <p className="text-sm text-muted-foreground">Belum ada family terdaftar.</p>
++        )}
++        {families.map((family) => {
++          const admin = family.members[0]?.profile;
++          return (
++            <Card key={family.id}>
++              <CardContent className="flex items-center justify-between py-4">
++                <div>
++                  <p className="font-medium">{family.name}</p>
++                  <p className="text-sm text-muted-foreground">
++                    {admin
++                      ? `Family Admin: ${admin.name ?? admin.username}`
++                      : "Belum ada Family Admin"}
++                  </p>
++                </div>
++                <div className="flex items-center gap-1 text-sm text-muted-foreground">
++                  <Users className="size-4" />
++                  {family._count.members} anggota
++                </div>
++              </CardContent>
++            </Card>
++          );
++        })}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 05a9119..80103f2 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -47,77 +47,54 @@
+   --font-sans: var(--font-geist-sans);
+ }
+ 
++/*
++ * SIKARA Design System — Light theme only (sesuai Master Refactor Prompt).
++ * Primary  : Emerald   (aksi utama, tombol, link aktif)
++ * Secondary: Sky Blue  (aksen sekunder, badge info, hover ringan)
++ * Accent   : Orange    (highlight, notifikasi, call-to-attention)
++ * Background: White / Gray 50 / Gray 100
++ * Catatan: variabel .dark SENGAJA dihapus, bukan hanya disembunyikan —
++ * lihat src/providers/theme.tsx yang sekarang memaksa light selalu aktif.
++ * Login Page TIDAK memakai variabel ini sama sekali (styling-nya inline,
++ * hardcoded), jadi perubahan ini tidak menyentuh tampilan Login Page.
++ */
+ :root {
+   --radius: 0.625rem;
+-  --background: oklch(1 0 0);
+-  --foreground: oklch(0.145 0 0);
+-  --card: oklch(1 0 0);
+-  --card-foreground: oklch(0.145 0 0);
+-  --popover: oklch(1 0 0);
+-  --popover-foreground: oklch(0.145 0 0);
+-  --primary: oklch(0.205 0 0);
+-  --primary-foreground: oklch(0.985 0 0);
+-  --secondary: oklch(0.97 0 0);
+-  --secondary-foreground: oklch(0.205 0 0);
+-  --muted: oklch(0.97 0 0);
+-  --muted-foreground: oklch(0.556 0 0);
+-  --accent: oklch(0.97 0 0);
+-  --accent-foreground: oklch(0.205 0 0);
+-  --destructive: oklch(0.577 0.245 27.325);
+-  --border: oklch(0.922 0 0);
+-  --input: oklch(0.922 0 0);
+-  --ring: oklch(0.708 0 0);
+-  --chart-1: oklch(0.87 0 0);
+-  --chart-2: oklch(0.556 0 0);
+-  --chart-3: oklch(0.439 0 0);
+-  --chart-4: oklch(0.371 0 0);
+-  --chart-5: oklch(0.269 0 0);
+-  --sidebar: oklch(0.985 0 0);
+-  --sidebar-foreground: oklch(0.145 0 0);
+-  --sidebar-primary: oklch(0.205 0 0);
+-  --sidebar-primary-foreground: oklch(0.985 0 0);
+-  --sidebar-accent: oklch(0.97 0 0);
+-  --sidebar-accent-foreground: oklch(0.205 0 0);
+-  --sidebar-border: oklch(0.922 0 0);
+-  --sidebar-ring: oklch(0.708 0 0);
++  --background: #ffffff;
++  --foreground: #0f172a;
++  --card: #ffffff;
++  --card-foreground: #0f172a;
++  --popover: #ffffff;
++  --popover-foreground: #0f172a;
++  --primary: #059669;
++  --primary-foreground: #ffffff;
++  --secondary: #e0f2fe;
++  --secondary-foreground: #075985;
++  --muted: #f3f4f6;
++  --muted-foreground: #6b7280;
++  --accent: #ffedd5;
++  --accent-foreground: #9a3412;
++  --destructive: #dc2626;
++  --border: #e5e7eb;
++  --input: #e5e7eb;
++  --ring: #10b981;
++  --chart-1: #059669;
++  --chart-2: #0ea5e9;
++  --chart-3: #f97316;
++  --chart-4: #6366f1;
++  --chart-5: #f59e0b;
++  --sidebar: #f9fafb;
++  --sidebar-foreground: #0f172a;
++  --sidebar-primary: #059669;
++  --sidebar-primary-foreground: #ffffff;
++  --sidebar-accent: #ecfdf5;
++  --sidebar-accent-foreground: #047857;
++  --sidebar-border: #e5e7eb;
++  --sidebar-ring: #10b981;
+   --font-sans: var(--font-geist-sans);
+   --font-mono: var(--font-geist-mono);
+ }
+ 
+-.dark {
+-  --background: oklch(0.145 0 0);
+-  --foreground: oklch(0.985 0 0);
+-  --card: oklch(0.205 0 0);
+-  --card-foreground: oklch(0.985 0 0);
+-  --popover: oklch(0.205 0 0);
+-  --popover-foreground: oklch(0.985 0 0);
+-  --primary: oklch(0.922 0 0);
+-  --primary-foreground: oklch(0.205 0 0);
+-  --secondary: oklch(0.269 0 0);
+-  --secondary-foreground: oklch(0.985 0 0);
+-  --muted: oklch(0.269 0 0);
+-  --muted-foreground: oklch(0.708 0 0);
+-  --accent: oklch(0.269 0 0);
+-  --accent-foreground: oklch(0.985 0 0);
+-  --destructive: oklch(0.704 0.191 22.216);
+-  --border: oklch(1 0 0 / 10%);
+-  --input: oklch(1 0 0 / 15%);
+-  --ring: oklch(0.556 0 0);
+-  --chart-1: oklch(0.87 0 0);
+-  --chart-2: oklch(0.556 0 0);
+-  --chart-3: oklch(0.439 0 0);
+-  --chart-4: oklch(0.371 0 0);
+-  --chart-5: oklch(0.269 0 0);
+-  --sidebar: oklch(0.205 0 0);
+-  --sidebar-foreground: oklch(0.985 0 0);
+-  --sidebar-primary: oklch(0.488 0.243 264.376);
+-  --sidebar-primary-foreground: oklch(0.985 0 0);
+-  --sidebar-accent: oklch(0.269 0 0);
+-  --sidebar-accent-foreground: oklch(0.985 0 0);
+-  --sidebar-border: oklch(1 0 0 / 10%);
+-  --sidebar-ring: oklch(0.556 0 0);
+-}
+-
+ @layer base {
+   * {
+     @apply border-border outline-ring/50;
+diff --git a/src/components/icons/piggy-chicken.tsx b/src/components/icons/piggy-chicken.tsx
+new file mode 100644
+index 0000000..e5f603b
+--- /dev/null
++++ b/src/components/icons/piggy-chicken.tsx
+@@ -0,0 +1,36 @@
++import type { SVGProps } from "react";
++
++/**
++ * Ikon "Celengan Ayam" — pengganti PiggyBank (lucide-react) untuk modul
++ * Savings/Tabungan, sesuai SIKARA Master Refactor Prompt (bagian ICON).
++ * Dibuat manual karena lucide-react belum punya ikon ayam/celengan ayam.
++ * Mengikuti konvensi lucide: viewBox 24x24, stroke currentColor, strokeWidth 2,
++ * supaya bisa dipakai dengan className yang sama (mis. "size-4").
++ */
++export function PiggyChicken(props: SVGProps<SVGSVGElement>) {
++  return (
++    <svg
++      xmlns="http://www.w3.org/2000/svg"
++      viewBox="0 0 24 24"
++      fill="none"
++      stroke="currentColor"
++      strokeWidth={2}
++      strokeLinecap="round"
++      strokeLinejoin="round"
++      {...props}
++    >
++      {/* Badan */}
++      <path d="M5 13.5c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5-3.1 6.5-7 6.5-7-2.9-7-6.5Z" />
++      {/* Jengger */}
++      <path d="M10.3 7.4c-.4-1-.1-2 .7-2.5-.5-.7-.3-1.6.4-1.9.6-.3 1.3 0 1.6.6.5-.5 1.3-.5 1.8 0 .5.5.4 1.3-.1 1.8.8.3 1.2 1.2.9 2.1" />
++      {/* Paruh */}
++      <path d="M18.5 12.2c.9-.1 1.6.5 1.5 1.3-.1.6-.7 1-1.3 1" />
++      {/* Mata */}
++      <circle cx="15.2" cy="12" r=".6" fill="currentColor" stroke="none" />
++      {/* Slot koin di punggung */}
++      <path d="M9.5 8.7 10 7.2" />
++      {/* Kaki */}
++      <path d="M8.5 19.5 8 21M15.5 19.5 15 21" />
++    </svg>
++  );
++}
+diff --git a/src/components/layout/app-sidebar.tsx b/src/components/layout/app-sidebar.tsx
+index 02e7fcf..2c049d9 100644
+--- a/src/components/layout/app-sidebar.tsx
++++ b/src/components/layout/app-sidebar.tsx
+@@ -15,7 +15,6 @@ import {
+   LogOut,
+   ArrowLeftRight,
+   Receipt,
+-  PiggyBank,
+   Home,
+   LineChart,
+   HandCoins,
+@@ -23,6 +22,7 @@ import {
+   Bell,
+   History,
+   DatabaseBackup,
++  ShieldCheck,
+ } from "lucide-react"
+ import {
+   Sidebar,
+@@ -38,6 +38,7 @@ import {
+ } from "@/components/ui/sidebar"
+ import { createClient } from "@/lib/supabase/client"
+ import { getAccess } from "@/lib/helpers/access"
++import { PiggyChicken } from "@/components/icons/piggy-chicken"
+ 
+ const navGroups = [
+   {
+@@ -60,7 +61,7 @@ const navGroups = [
+     label: "Perencanaan",
+     items: [
+       { title: "Tagihan", url: "/dashboard/bills", icon: Receipt, module: "bills" },
+-      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyBank, module: "savings" },
++      { title: "Tabungan", url: "/dashboard/savings", icon: PiggyChicken, module: "savings" },
+       { title: "Aset", url: "/dashboard/assets", icon: Home, module: "assets" },
+       { title: "Investasi", url: "/dashboard/investments", icon: LineChart, module: "investments" },
+       { title: "Hutang", url: "/dashboard/debts", icon: HandCoins, module: "debts" },
+@@ -85,10 +86,18 @@ const navGroups = [
+   },
+ ]
+ 
++const superAdminGroup = {
++  label: "Super Admin",
++  items: [
++    { title: "Kelola Family", url: "/dashboard/super", icon: ShieldCheck, module: "super" },
++  ],
++}
++
+ export function AppSidebar({
+   role,
++  superAdmin,
+   ...props
+-}: React.ComponentProps<typeof Sidebar> & { role: string }) {
++}: React.ComponentProps<typeof Sidebar> & { role: string; superAdmin?: boolean }) {
+   const pathname = usePathname()
+   const router = useRouter()
+   const [loggingOut, setLoggingOut] = useState(false)
+@@ -99,6 +108,7 @@ export function AppSidebar({
+       items: group.items.filter((item) => getAccess(item.module as never, role) !== "none"),
+     }))
+     .filter((group) => group.items.length > 0)
++    .concat(superAdmin ? [superAdminGroup] : [])
+ 
+ 
+   const handleLogout = async () => {
+diff --git a/src/features/family/actions.ts b/src/features/family/actions.ts
+index 209cd69..05220e7 100644
+--- a/src/features/family/actions.ts
++++ b/src/features/family/actions.ts
+@@ -31,6 +31,38 @@ export async function createFamily(formData: FormData) {
+   redirect("/dashboard");
+ }
+ 
++/**
++ * Super Admin membuat Family baru TANPA otomatis menjadi anggotanya
++ * (Super Admin mengelola lintas family, bukan berpartisipasi di
++ * dalamnya). Family Admin untuk family ini ditunjuk belakangan lewat
++ * halaman /dashboard/super (TODO: fitur assign Family Admin — lihat
++ * laporan refactor).
++ */
++export async function createFamilyAsSuperAdmin(formData: FormData) {
++  const supabase = await createClient();
++  const {
++    data: { user },
++  } = await supabase.auth.getUser();
++  if (!user) throw new Error("Unauthorized");
++
++  const requester = await prisma.profile.findUnique({
++    where: { id: user.id },
++    select: { role: true },
++  });
++  if (requester?.role !== "SUPER_ADMIN") {
++    throw new Error("Hanya Super Admin yang dapat menggunakan aksi ini");
++  }
++
++  const name = formData.get("name") as string;
++  if (!name || name.trim().length === 0) {
++    throw new Error("Nama keluarga wajib diisi");
++  }
++
++  await prisma.family.create({ data: { name: name.trim() } });
++
++  revalidatePath("/dashboard/super");
++}
++
+ export async function joinFamily(formData: FormData) {
+   const supabase = await createClient();
+   const {
+diff --git a/src/lib/helpers/access.ts b/src/lib/helpers/access.ts
+index d6ca016..740c07c 100644
+--- a/src/lib/helpers/access.ts
++++ b/src/lib/helpers/access.ts
+@@ -1,9 +1,14 @@
+ /**
+- * Hak akses berbasis SystemRole (bukan Relationship lagi), sesuai
+- * docs/ARCHITECTURE_V2.md. Family Admin = akses penuh ke modul keuangan
+- * keluarganya. Member = akses terbatas (Dashboard, Transaksi, Rekening,
+- * Tabungan, Laporan). Super Admin punya area terpisah (lihat access-super.ts
+- * kalau ada) dan tidak memakai matrix modul keuangan ini.
++ * Hak akses berbasis SystemRole, sesuai docs/ARCHITECTURE_V2.md dan
++ * SIKARA Master Refactor Prompt.
++ *
++ * - FAMILY_ADMIN = akses penuh ke modul keuangan keluarganya (dicek dari
++ *   FamilyMember.systemRole).
++ * - MEMBER = akses terbatas (Dashboard, Transaksi, Rekening, Tabungan, Laporan).
++ * - SUPER_ADMIN = role global (dicek dari Profile.role, bukan FamilyMember),
++ *   dipakai khusus untuk area /dashboard/super (kelola seluruh family).
++ *   Tidak dicek lewat getAccess() ini karena super admin tidak beroperasi di
++ *   dalam matrix modul keuangan satu family — dia mengelola lintas family.
+  */
+ export type AccessLevel = "full" | "none";
+ export type SystemRoleType = "FAMILY_ADMIN" | "MEMBER";
+@@ -23,3 +28,11 @@ export function getAccess(module: string, systemRole: string): AccessLevel {
+   if (systemRole === "FAMILY_ADMIN") return "full";
+   return MEMBER_ALLOWED_MODULES.has(module) ? "full" : "none";
+ }
++
++/**
++ * Cek apakah sebuah profile adalah Super Admin (role global).
++ * Dipakai untuk gating area /dashboard/super, terpisah dari getAccess().
++ */
++export function isSuperAdmin(profileRole: string): boolean {
++  return profileRole === "SUPER_ADMIN";
++}
+diff --git a/src/providers/theme.tsx b/src/providers/theme.tsx
+index aa65737..69af14b 100644
+--- a/src/providers/theme.tsx
++++ b/src/providers/theme.tsx
+@@ -1,32 +1,18 @@
+ "use client";
+ 
+-import { useEffect, useState } from "react";
+-import { useThemeStore } from "@/store/theme";
+-
++import { useEffect } from "react";
++
++// SIKARA Design System: Light theme only (Master Refactor Prompt - THEME).
++// Dark mode dinonaktifkan secara sengaja. Store lama (@/store/theme) masih
++// ada untuk kompatibilitas kalau ada kode lain yang membacanya, tapi tidak
++// lagi dipakai untuk toggle class "dark" di sini.
++// TODO (dicatat, belum dieksekusi tanpa persetujuan): hapus src/store/theme.ts
++// dan seluruh pemanggilnya kalau sudah dipastikan tidak dipakai di tempat lain.
+ export function ThemeProvider({ children }: { children: React.ReactNode }) {
+-  const theme = useThemeStore((s) => s.theme);
+-  const [mounted, setMounted] = useState(false);
+-
+   useEffect(() => {
+-    setMounted(true);
++    document.documentElement.classList.remove("dark");
++    localStorage.removeItem("theme");
+   }, []);
+ 
+-  useEffect(() => {
+-    if (!mounted) return;
+-
+-    const root = document.documentElement;
+-
+-    if (theme === "system") {
+-      const prefersDark = window.matchMedia(
+-        "(prefers-color-scheme: dark)",
+-      ).matches;
+-      root.classList.toggle("dark", prefersDark);
+-    } else {
+-      root.classList.toggle("dark", theme === "dark");
+-    }
+-
+-    localStorage.setItem("theme", theme);
+-  }, [theme, mounted]);
+-
+   return <>{children}</>;
+ }

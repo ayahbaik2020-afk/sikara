@@ -1,32 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useThemeStore } from "@/store/theme";
+import { useEffect } from "react";
 
+// SIKARA Design System: Light theme only (Master Refactor Prompt - THEME).
+// Dark mode dinonaktifkan secara sengaja. Store lama (@/store/theme) masih
+// ada untuk kompatibilitas kalau ada kode lain yang membacanya, tapi tidak
+// lagi dipakai untuk toggle class "dark" di sini.
+// TODO (dicatat, belum dieksekusi tanpa persetujuan): hapus src/store/theme.ts
+// dan seluruh pemanggilnya kalau sudah dipastikan tidak dipakai di tempat lain.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const theme = useThemeStore((s) => s.theme);
-  const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
-    setMounted(true);
+    document.documentElement.classList.remove("dark");
+    localStorage.removeItem("theme");
   }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    const root = document.documentElement;
-
-    if (theme === "system") {
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)",
-      ).matches;
-      root.classList.toggle("dark", prefersDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
-    }
-
-    localStorage.setItem("theme", theme);
-  }, [theme, mounted]);
 
   return <>{children}</>;
 }
