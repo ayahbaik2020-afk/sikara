@@ -186,6 +186,82 @@ export async function joinFamily(formData: FormData) {
   redirect(`/dashboard/families/${family.id}`);
 }
 
+/**
+ * Family Admin membuat akun Member (Ibu/Anak) baru untuk family miliknya.
+ * Sejalan dengan aturan login project ini (username+password, TANPA
+ * invite/register), jadi ini pengganti alur "Kode Undangan" lama yang
+ * mengharuskan orang punya akun duluan sebelum bisa join.
+ */
+export async function createFamilyMember(familyId: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const requesterMember = await prisma.familyMember.findUnique({
+    where: { profileId_familyId: { profileId: user.id, familyId } },
+  });
+  if (requesterMember?.systemRole !== "FAMILY_ADMIN") {
+    throw new Error("Hanya Family Admin yang dapat menambah anggota");
+  }
+
+  const username = (formData.get("username") as string)?.trim();
+  const name = (formData.get("name") as string)?.trim();
+  const password = formData.get("password") as string;
+  const relationship = (formData.get("relationship") as string) || "ANAK";
+
+  if (!username || !name || !password) {
+    throw new Error("Username, nama, dan password wajib diisi");
+  }
+  if (password.length < 8) {
+    throw new Error("Password minimal 8 karakter");
+  }
+
+  const existingUsername = await prisma.profile.findUnique({ where: { username } });
+  if (existingUsername) throw new Error("Username sudah dipakai, pilih yang lain");
+
+  const email = `${username}@sikara.internal`;
+
+  const supabaseAdmin = createAdminClient();
+  const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (error || !created.user) {
+    throw new Error(`Gagal membuat akun: ${error?.message ?? "unknown error"}`);
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.profile.create({
+        data: {
+          id: created.user.id,
+          email,
+          username,
+          name,
+          role: "MEMBER",
+          status: "ACTIVE",
+        },
+      }),
+      prisma.familyMember.create({
+        data: {
+          profileId: created.user.id,
+          familyId,
+          systemRole: "MEMBER",
+          relationship: relationship as "AYAH" | "IBU" | "ANAK",
+        },
+      }),
+    ]);
+  } catch (dbError) {
+    await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+    throw dbError;
+  }
+
+  revalidatePath(`/dashboard/families/${familyId}`);
+}
+
 export async function removeMember(formData: FormData) {
   const supabase = await createClient();
   const {

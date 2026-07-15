@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { removeMember } from "@/features/family/actions";
 import { RelationshipSelect } from "@/features/family/relationship-select";
+import { AddFamilyMemberDialog } from "@/features/family/add-family-member-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,8 +80,9 @@ export default async function FamilyDetailPage({
       )}
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Anggota Keluarga</CardTitle>
+          {isAdmin && <AddFamilyMemberDialog familyId={family.id} />}
         </CardHeader>
         <CardContent className="space-y-3">
           {family.members.map((member) => {
