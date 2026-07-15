@@ -1,0 +1,93 @@
+diff --git a/src/app/dashboard/families/[id]/page.tsx b/src/app/dashboard/families/[id]/page.tsx
+index 51eb8bb..2ba60f0 100644
+--- a/src/app/dashboard/families/[id]/page.tsx
++++ b/src/app/dashboard/families/[id]/page.tsx
+@@ -2,7 +2,8 @@ import Link from "next/link";
+ import { notFound } from "next/navigation";
+ import { createClient } from "@/lib/supabase/server";
+ import { prisma } from "@/lib/prisma";
+-import { removeMember, updateMemberRelationship } from "@/features/family/actions";
++import { removeMember } from "@/features/family/actions";
++import { RelationshipSelect } from "@/features/family/relationship-select";
+ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+@@ -116,20 +117,11 @@ export default async function FamilyDetailPage({
+                   </Badge>
+ 
+                   {isAdmin && (
+-                    <form action={updateMemberRelationship} className="flex items-center">
+-                      <input type="hidden" name="memberId" value={member.id} />
+-                      <input type="hidden" name="familyId" value={family.id} />
+-                      <select
+-                        name="relationship"
+-                        defaultValue={member.relationship}
+-                        onChange={(e) => e.currentTarget.form?.requestSubmit()}
+-                        className="flex h-8 items-center rounded-lg border border-input bg-transparent px-2 py-1 text-xs transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+-                      >
+-                        <option value="AYAH">Ayah</option>
+-                        <option value="IBU">Ibu</option>
+-                        <option value="ANAK">Anak</option>
+-                      </select>
+-                    </form>
++                    <RelationshipSelect
++                      memberId={member.id}
++                      familyId={family.id}
++                      defaultValue={member.relationship}
++                    />
+                   )}
+ 
+                   {isAdmin && !isSelf && (
+diff --git a/src/features/family/relationship-select.tsx b/src/features/family/relationship-select.tsx
+new file mode 100644
+index 0000000..4a9d9f6
+--- /dev/null
++++ b/src/features/family/relationship-select.tsx
+@@ -0,0 +1,47 @@
++"use client";
++
++import { useTransition } from "react";
++import { updateMemberRelationship } from "@/features/family/actions";
++
++/**
++ * Native <select> dengan onChange TIDAK BOLEH dirender langsung di Server
++ * Component (menyebabkan "Event handlers cannot be passed to Client
++ * Component props" — crash total di production/Vercel). Dipisah ke sini
++ * sebagai Client Component kecil, dipanggil dari families/[id]/page.tsx
++ * (Server Component) seperti komponen client lainnya.
++ */
++export function RelationshipSelect({
++  memberId,
++  familyId,
++  defaultValue,
++}: {
++  memberId: string;
++  familyId: string;
++  defaultValue: string;
++}) {
++  const [pending, startTransition] = useTransition();
++
++  function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
++    const formData = new FormData();
++    formData.set("memberId", memberId);
++    formData.set("familyId", familyId);
++    formData.set("relationship", e.target.value);
++    startTransition(() => {
++      updateMemberRelationship(formData);
++    });
++  }
++
++  return (
++    <select
++      name="relationship"
++      defaultValue={defaultValue}
++      onChange={handleChange}
++      disabled={pending}
++      className="flex h-8 items-center rounded-lg border border-input bg-transparent px-2 py-1 text-xs transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
++    >
++      <option value="AYAH">Ayah</option>
++      <option value="IBU">Ibu</option>
++      <option value="ANAK">Anak</option>
++    </select>
++  );
++}
