@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { removeMember, updateMemberRelationship } from "@/features/family/actions";
+import { removeMember } from "@/features/family/actions";
+import { RelationshipSelect } from "@/features/family/relationship-select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -116,20 +117,11 @@ export default async function FamilyDetailPage({
                   </Badge>
 
                   {isAdmin && (
-                    <form action={updateMemberRelationship} className="flex items-center">
-                      <input type="hidden" name="memberId" value={member.id} />
-                      <input type="hidden" name="familyId" value={family.id} />
-                      <select
-                        name="relationship"
-                        defaultValue={member.relationship}
-                        onChange={(e) => e.currentTarget.form?.requestSubmit()}
-                        className="flex h-8 items-center rounded-lg border border-input bg-transparent px-2 py-1 text-xs transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                      >
-                        <option value="AYAH">Ayah</option>
-                        <option value="IBU">Ibu</option>
-                        <option value="ANAK">Anak</option>
-                      </select>
-                    </form>
+                    <RelationshipSelect
+                      memberId={member.id}
+                      familyId={family.id}
+                      defaultValue={member.relationship}
+                    />
                   )}
 
                   {isAdmin && !isSelf && (
