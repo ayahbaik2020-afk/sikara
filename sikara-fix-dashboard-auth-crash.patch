@@ -1,0 +1,62 @@
+diff --git a/src/app/dashboard/layout.tsx b/src/app/dashboard/layout.tsx
+index ecd27d8..ba181ff 100644
+--- a/src/app/dashboard/layout.tsx
++++ b/src/app/dashboard/layout.tsx
+@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
+ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+ import { Separator } from "@/components/ui/separator"
+ import { AppSidebar } from "@/components/layout/app-sidebar"
+-import { getCurrentFamilyMember, getCurrentProfile } from "@/lib/helpers/family"
++import { getCurrentMemberAndProfile } from "@/lib/helpers/family"
+ import { isSuperAdmin } from "@/lib/helpers/access"
+ 
+ export default async function DashboardLayout({
+@@ -15,10 +15,9 @@ export default async function DashboardLayout({
+   // Super Admin biasanya tidak punya FamilyMember (tidak ikut family manapun),
+   // jadi role sidebar harus dicek dari dua sumber: role global (Profile.role)
+   // untuk Super Admin, dan systemRole (FamilyMember) untuk menu modul keuangan.
+-  const [member, profile] = await Promise.all([
+-    getCurrentFamilyMember(),
+-    getCurrentProfile(),
+-  ])
++  // Dipanggil lewat SATU helper (getCurrentMemberAndProfile) supaya tidak ada
++  // dua pemanggilan Supabase auth/cookie berjalan bersamaan di Server Component.
++  const { member, profile } = await getCurrentMemberAndProfile()
+   const superAdmin = profile ? isSuperAdmin(profile.role) : false
+ 
+   return (
+diff --git a/src/lib/helpers/family.ts b/src/lib/helpers/family.ts
+index d37cd61..298a9ac 100644
+--- a/src/lib/helpers/family.ts
++++ b/src/lib/helpers/family.ts
+@@ -26,3 +26,30 @@ export async function getCurrentProfile() {
+ 
+   return prisma.profile.findUnique({ where: { id: user.id } });
+ }
++
++/**
++ * Sama seperti memanggil getCurrentFamilyMember() + getCurrentProfile()
++ * bersamaan, tapi hanya membuat SATU client Supabase & SATU pemanggilan
++ * auth.getUser(). Dipakai di dashboard/layout.tsx supaya tidak ada dua
++ * pemanggilan cookie-handling Supabase yang berjalan bersamaan dalam satu
++ * Server Component (berpotensi menyebabkan server-side exception di
++ * runtime Next.js/Vercel).
++ */
++export async function getCurrentMemberAndProfile() {
++  const supabase = await createClient();
++  const {
++    data: { user },
++  } = await supabase.auth.getUser();
++  if (!user) return { member: null, profile: null };
++
++  const [member, profile] = await Promise.all([
++    prisma.familyMember.findFirst({
++      where: { profileId: user.id },
++      include: { family: true, profile: true },
++      orderBy: { joinedAt: "asc" },
++    }),
++    prisma.profile.findUnique({ where: { id: user.id } }),
++  ]);
++
++  return { member, profile };
++}

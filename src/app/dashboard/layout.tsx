@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import { AppSidebar } from "@/components/layout/app-sidebar"
-import { getCurrentFamilyMember, getCurrentProfile } from "@/lib/helpers/family"
+import { getCurrentMemberAndProfile } from "@/lib/helpers/family"
 import { isSuperAdmin } from "@/lib/helpers/access"
 
 export default async function DashboardLayout({
@@ -15,10 +15,9 @@ export default async function DashboardLayout({
   // Super Admin biasanya tidak punya FamilyMember (tidak ikut family manapun),
   // jadi role sidebar harus dicek dari dua sumber: role global (Profile.role)
   // untuk Super Admin, dan systemRole (FamilyMember) untuk menu modul keuangan.
-  const [member, profile] = await Promise.all([
-    getCurrentFamilyMember(),
-    getCurrentProfile(),
-  ])
+  // Dipanggil lewat SATU helper (getCurrentMemberAndProfile) supaya tidak ada
+  // dua pemanggilan Supabase auth/cookie berjalan bersamaan di Server Component.
+  const { member, profile } = await getCurrentMemberAndProfile()
   const superAdmin = profile ? isSuperAdmin(profile.role) : false
 
   return (
