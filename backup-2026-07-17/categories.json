@@ -1,0 +1,156 @@
+[
+  {
+    "id": "b8c7fbec-b1b6-4560-a782-9715f86046cf",
+    "familyId": "bf1c05dc-6d4f-48d6-a313-3e26d3389921",
+    "type": "INCOME",
+    "name": "Gajih Ayah",
+    "icon": "tag",
+    "color": "#ff0000",
+    "isActive": true,
+    "createdAt": "2026-07-11T02:09:25.821Z",
+    "updatedAt": "2026-07-11T02:09:25.821Z"
+  },
+  {
+    "id": "24385e0c-17c8-447b-8726-758dd0600373",
+    "familyId": "bf1c05dc-6d4f-48d6-a313-3e26d3389921",
+    "type": "INCOME",
+    "name": "Lain-lain",
+    "icon": "tag",
+    "color": "#6366f1",
+    "isActive": true,
+    "createdAt": "2026-07-11T02:09:49.649Z",
+    "updatedAt": "2026-07-11T02:09:49.649Z"
+  },
+  {
+    "id": "958680c8-80e4-4f6b-8d70-6173823ee954",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "INCOME",
+    "name": "Gajih Ayah",
+    "icon": "tag",
+    "color": "#f26480",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:49:54.372Z",
+    "updatedAt": "2026-07-15T08:49:54.372Z"
+  },
+  {
+    "id": "2aefd8be-9e20-429b-8050-e4fc46af8de9",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Token PLN",
+    "icon": "tag",
+    "color": "#eff264",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:54:13.749Z",
+    "updatedAt": "2026-07-15T08:54:13.749Z"
+  },
+  {
+    "id": "027570a7-6a8f-4efd-b054-a58764477a67",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "I Connet (Internet)",
+    "icon": "tag",
+    "color": "#6366f1",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:54:47.006Z",
+    "updatedAt": "2026-07-15T08:54:47.006Z"
+  },
+  {
+    "id": "e5578996-c304-4cc1-8911-fae342aca926",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Cicilan Rumah",
+    "icon": "tag",
+    "color": "#214e09",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:55:20.990Z",
+    "updatedAt": "2026-07-15T08:55:20.990Z"
+  },
+  {
+    "id": "57fa0c29-f337-4a0f-a071-8d71e449845b",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Cicilan Kredivo",
+    "icon": "tag",
+    "color": "#f26496",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:55:45.369Z",
+    "updatedAt": "2026-07-15T08:55:45.369Z"
+  },
+  {
+    "id": "8b923e32-fc0f-48e7-b0c1-ba6845d0a54a",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Cicilan Spinjam",
+    "icon": "tag",
+    "color": "#f264e6",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:56:37.400Z",
+    "updatedAt": "2026-07-15T08:56:37.400Z"
+  },
+  {
+    "id": "85229f2b-cd45-4c57-b432-13f94dc0aa66",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Cicilan Spaylater",
+    "icon": "tag",
+    "color": "#f264b7",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:57:04.430Z",
+    "updatedAt": "2026-07-15T08:57:04.430Z"
+  },
+  {
+    "id": "5606c4b5-4a95-4c14-805f-bde5a2e3f145",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Transportasi harian",
+    "icon": "tag",
+    "color": "#00ff00",
+    "isActive": true,
+    "createdAt": "2026-07-15T11:44:04.646Z",
+    "updatedAt": "2026-07-15T11:44:04.646Z"
+  },
+  {
+    "id": "28b5b20d-01c8-4d1b-ba96-8edf44661654",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Bensin",
+    "icon": "tag",
+    "color": "#0000ff",
+    "isActive": true,
+    "createdAt": "2026-07-15T11:44:26.675Z",
+    "updatedAt": "2026-07-15T11:44:26.675Z"
+  },
+  {
+    "id": "fe903a18-e37e-4df0-88b5-8491a184a75d",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Belanja harian ",
+    "icon": "tag",
+    "color": "#000000",
+    "isActive": true,
+    "createdAt": "2026-07-15T11:45:02.152Z",
+    "updatedAt": "2026-07-15T11:45:02.152Z"
+  },
+  {
+    "id": "bc04686f-9cff-41da-9a5c-cc587fe4c2fc",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Belanja Mingguan ",
+    "icon": "tag",
+    "color": "#ffff00",
+    "isActive": true,
+    "createdAt": "2026-07-15T11:45:21.215Z",
+    "updatedAt": "2026-07-15T11:45:21.215Z"
+  },
+  {
+    "id": "513b2e6a-ed49-4542-9676-fb323cd5dd71",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "type": "EXPENSE",
+    "name": "Iuran sampah dan keamanan",
+    "icon": "tag",
+    "color": "#ffffff",
+    "isActive": true,
+    "createdAt": "2026-07-15T11:46:12.989Z",
+    "updatedAt": "2026-07-15T11:46:12.989Z"
+  }
+]

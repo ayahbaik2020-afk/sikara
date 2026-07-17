@@ -1,0 +1,46 @@
+[
+  {
+    "id": "882cdcc1-e725-4f19-ab95-a2bb578b3adb",
+    "email": "ayah@sikara.my.id",
+    "username": "ayah",
+    "name": "Ayah",
+    "avatarUrl": null,
+    "role": "MEMBER",
+    "status": "ACTIVE",
+    "createdAt": "2026-07-10T03:28:29.642Z",
+    "updatedAt": "2026-07-10T03:28:29.642Z"
+  },
+  {
+    "id": "5f14b58e-7f8c-494b-8fd9-fe951cc012f9",
+    "email": "anak@sikara.my.id",
+    "username": "anak",
+    "name": "Anak",
+    "avatarUrl": null,
+    "role": "MEMBER",
+    "status": "ACTIVE",
+    "createdAt": "2026-07-10T03:28:29.642Z",
+    "updatedAt": "2026-07-10T03:28:29.642Z"
+  },
+  {
+    "id": "b2b40754-8cbf-4575-ba7f-1ff141433fd8",
+    "email": "superadmin@sikara.local",
+    "username": "superadmin",
+    "name": "Super Admin",
+    "avatarUrl": null,
+    "role": "MEMBER",
+    "status": "ACTIVE",
+    "createdAt": "2026-07-14T07:42:24.038Z",
+    "updatedAt": "2026-07-14T07:42:24.038Z"
+  },
+  {
+    "id": "d06f497b-6bdc-488a-86a8-76eeaee3c2f1",
+    "email": "ibu@sikara.my.id",
+    "username": "ibu",
+    "name": "Indah Permata Sari",
+    "avatarUrl": null,
+    "role": "MEMBER",
+    "status": "ACTIVE",
+    "createdAt": "2026-07-10T03:28:29.642Z",
+    "updatedAt": "2026-07-10T03:28:29.642Z"
+  }
+]

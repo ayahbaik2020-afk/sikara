@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0a8fb541-7577-4e1b-9128-4ed138512775",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "Cicilan Rumah",
+    "amount": "700000",
+    "dueDate": "2026-07-25T00:00:00.000Z",
+    "recurrence": "MONTHLY",
+    "status": "UNPAID",
+    "note": null,
+    "createdAt": "2026-07-15T08:58:20.033Z",
+    "updatedAt": "2026-07-15T08:58:20.033Z"
+  }
+]

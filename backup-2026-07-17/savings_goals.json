@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ee905c7d-c5fd-4923-90d9-b840e71c1577",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "Dana Darurat",
+    "currentAmount": "0",
+    "targetAmount": "500000",
+    "targetDate": "2026-08-25T00:00:00.000Z",
+    "note": null,
+    "createdAt": "2026-07-15T11:47:40.000Z",
+    "updatedAt": "2026-07-15T11:47:40.000Z"
+  },
+  {
+    "id": "e5dd7577-e8b4-41fb-8abf-1ea7c8924bca",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "Liburan",
+    "currentAmount": "0",
+    "targetAmount": "3000000",
+    "targetDate": "2026-12-25T00:00:00.000Z",
+    "note": null,
+    "createdAt": "2026-07-15T11:48:25.306Z",
+    "updatedAt": "2026-07-15T11:48:25.306Z"
+  }
+]

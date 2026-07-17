@@ -1,0 +1,86 @@
+[
+  {
+    "id": "3c7350c2-493f-452c-b967-7cd08005cf75",
+    "familyId": "bf1c05dc-6d4f-48d6-a313-3e26d3389921",
+    "name": "Ayah",
+    "type": "CASH",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-11T02:10:24.475Z",
+    "updatedAt": "2026-07-11T02:10:24.475Z"
+  },
+  {
+    "id": "dd520179-15ca-4d46-8010-be0a3a8a3e3c",
+    "familyId": "bf1c05dc-6d4f-48d6-a313-3e26d3389921",
+    "name": "Ibu",
+    "type": "CASH",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-11T02:10:51.409Z",
+    "updatedAt": "2026-07-11T02:10:51.409Z"
+  },
+  {
+    "id": "103d747f-56b0-479f-8e92-1e63dfd4567c",
+    "familyId": "bf1c05dc-6d4f-48d6-a313-3e26d3389921",
+    "name": "Mandiri Ayah",
+    "type": "BANK",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-11T02:11:11.242Z",
+    "updatedAt": "2026-07-11T02:11:11.242Z"
+  },
+  {
+    "id": "91c5de35-e25a-4cf0-9da1-502b7cbff74f",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "Victoria",
+    "type": "BANK",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:53:15.016Z",
+    "updatedAt": "2026-07-15T08:53:15.016Z"
+  },
+  {
+    "id": "bde24d49-ded3-40e8-a300-de59c5eb19c3",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "Ayah",
+    "type": "CASH",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:53:29.674Z",
+    "updatedAt": "2026-07-15T08:53:29.674Z"
+  },
+  {
+    "id": "e8c044ed-40ed-47e8-a55c-fe5c769fc449",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "Ibu",
+    "type": "CASH",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-15T08:53:42.229Z",
+    "updatedAt": "2026-07-15T08:53:42.229Z"
+  },
+  {
+    "id": "2010b998-58cb-49a5-8d47-42097cd72d32",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa",
+    "name": "BSI ",
+    "type": "BANK",
+    "balance": "0",
+    "icon": "wallet",
+    "color": "#3B82F6",
+    "isActive": true,
+    "createdAt": "2026-07-15T11:53:02.833Z",
+    "updatedAt": "2026-07-15T11:53:02.833Z"
+  }
+]

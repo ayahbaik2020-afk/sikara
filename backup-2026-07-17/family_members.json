@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ed1f10be-af0f-4525-881e-cae431dc45e7",
+    "systemRole": "FAMILY_ADMIN",
+    "relationship": "AYAH",
+    "joinedAt": "2026-07-11T02:07:31.901Z",
+    "profileId": "882cdcc1-e725-4f19-ab95-a2bb578b3adb",
+    "familyId": "bf1c05dc-6d4f-48d6-a313-3e26d3389921"
+  },
+  {
+    "id": "fac67ed2-af0f-4ca6-957d-871596758f17",
+    "systemRole": "FAMILY_ADMIN",
+    "relationship": "AYAH",
+    "joinedAt": "2026-07-14T08:27:35.269Z",
+    "profileId": "b2b40754-8cbf-4575-ba7f-1ff141433fd8",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa"
+  },
+  {
+    "id": "e8003523-895d-4810-b376-ed9dd89afc76",
+    "systemRole": "FAMILY_ADMIN",
+    "relationship": "IBU",
+    "joinedAt": "2026-07-15T06:26:02.210Z",
+    "profileId": "d06f497b-6bdc-488a-86a8-76eeaee3c2f1",
+    "familyId": "04383a55-8e02-4a0a-af7b-f0e9173e79fa"
+  }
+]
