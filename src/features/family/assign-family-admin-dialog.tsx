@@ -36,8 +36,12 @@ export function AssignFamilyAdminDialog({
     setError(null);
     startTransition(async () => {
       try {
-        await assignFamilyAdmin(familyId, formData);
-        setOpen(false);
+        const result = await assignFamilyAdmin(familyId, formData);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          setOpen(false);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Gagal membuat Family Admin");
       }

@@ -31,8 +31,12 @@ export function AddFamilyMemberDialog({ familyId }: { familyId: string }) {
     setError(null);
     startTransition(async () => {
       try {
-        await createFamilyMember(familyId, formData);
-        setOpen(false);
+        const result = await createFamilyMember(familyId, formData);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          setOpen(false);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Gagal membuat anggota");
       }

@@ -76,76 +76,84 @@ export async function createFamilyAsSuperAdmin(formData: FormData) {
  * setelah login pertama (belum ada halaman ganti password — dicatat
  * sebagai TODO terpisah).
  */
-export async function assignFamilyAdmin(familyId: string, formData: FormData) {
-  await requireSuperAdmin();
-
-  const username = (formData.get("username") as string)?.trim();
-  const name = (formData.get("name") as string)?.trim();
-  const password = formData.get("password") as string;
-  const relationship = (formData.get("relationship") as string) || "AYAH";
-
-  if (!username || !name || !password) {
-    throw new Error("Username, nama, dan password wajib diisi");
-  }
-  if (password.length < 8) {
-    throw new Error("Password minimal 8 karakter");
-  }
-
-  const family = await prisma.family.findUnique({
-    where: { id: familyId },
-    include: { members: { where: { systemRole: "FAMILY_ADMIN" } } },
-  });
-  if (!family) throw new Error("Family tidak ditemukan");
-  if (family.members.length > 0) {
-    throw new Error("Family ini sudah punya Family Admin aktif");
-  }
-
-  const existingUsername = await prisma.profile.findUnique({ where: { username } });
-  if (existingUsername) throw new Error("Username sudah dipakai, pilih yang lain");
-
-  // Username tidak dipakai untuk email asli, jadi generate email placeholder
-  // internal yang unik (aplikasi ini login pakai username, bukan email).
-  const email = `${username}@sikara.internal`;
-
-  const supabaseAdmin = createAdminClient();
-  const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-  if (error || !created.user) {
-    throw new Error(`Gagal membuat akun: ${error?.message ?? "unknown error"}`);
-  }
-
+export async function assignFamilyAdmin(
+  familyId: string,
+  formData: FormData,
+): Promise<{ error?: string }> {
   try {
-    await prisma.$transaction([
-      prisma.profile.create({
-        data: {
-          id: created.user.id,
-          email,
-          username,
-          name,
-          role: "MEMBER", // role global biasa; hak akses FAMILY_ADMIN ada di FamilyMember
-          status: "ACTIVE",
-        },
-      }),
-      prisma.familyMember.create({
-        data: {
-          profileId: created.user.id,
-          familyId,
-          systemRole: "FAMILY_ADMIN",
-          relationship: relationship as "AYAH" | "IBU" | "ANAK",
-        },
-      }),
-    ]);
-  } catch (dbError) {
-    // Rollback manual: kalau insert ke Prisma gagal, jangan tinggalkan
-    // user Supabase Auth yatim tanpa profile.
-    await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-    throw dbError;
-  }
+    await requireSuperAdmin();
 
-  revalidatePath("/dashboard/super");
+    const username = (formData.get("username") as string)?.trim();
+    const name = (formData.get("name") as string)?.trim();
+    const password = formData.get("password") as string;
+    const relationship = (formData.get("relationship") as string) || "AYAH";
+
+    if (!username || !name || !password) {
+      throw new Error("Username, nama, dan password wajib diisi");
+    }
+    if (password.length < 8) {
+      throw new Error("Password minimal 8 karakter");
+    }
+
+    const family = await prisma.family.findUnique({
+      where: { id: familyId },
+      include: { members: { where: { systemRole: "FAMILY_ADMIN" } } },
+    });
+    if (!family) throw new Error("Family tidak ditemukan");
+    if (family.members.length > 0) {
+      throw new Error("Family ini sudah punya Family Admin aktif");
+    }
+
+    const existingUsername = await prisma.profile.findUnique({ where: { username } });
+    if (existingUsername) throw new Error("Username sudah dipakai, pilih yang lain");
+
+    // Username tidak dipakai untuk email asli, jadi generate email placeholder
+    // internal yang unik (aplikasi ini login pakai username, bukan email).
+    const email = `${username}@sikara.internal`;
+
+    const supabaseAdmin = createAdminClient();
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (error || !created.user) {
+      throw new Error(`Gagal membuat akun: ${error?.message ?? "unknown error"}`);
+    }
+
+    try {
+      await prisma.$transaction([
+        prisma.profile.create({
+          data: {
+            id: created.user.id,
+            email,
+            username,
+            name,
+            role: "MEMBER", // role global biasa; hak akses FAMILY_ADMIN ada di FamilyMember
+            status: "ACTIVE",
+          },
+        }),
+        prisma.familyMember.create({
+          data: {
+            profileId: created.user.id,
+            familyId,
+            systemRole: "FAMILY_ADMIN",
+            relationship: relationship as "AYAH" | "IBU" | "ANAK",
+          },
+        }),
+      ]);
+    } catch (dbError) {
+      // Rollback manual: kalau insert ke Prisma gagal, jangan tinggalkan
+      // user Supabase Auth yatim tanpa profile.
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw dbError;
+    }
+
+    revalidatePath("/dashboard/super");
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Terjadi kesalahan tidak diketahui" };
+  }
 }
 
 export async function joinFamily(formData: FormData) {
@@ -192,74 +200,82 @@ export async function joinFamily(formData: FormData) {
  * invite/register), jadi ini pengganti alur "Kode Undangan" lama yang
  * mengharuskan orang punya akun duluan sebelum bisa join.
  */
-export async function createFamilyMember(familyId: string, formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Unauthorized");
-
-  const requesterMember = await prisma.familyMember.findUnique({
-    where: { profileId_familyId: { profileId: user.id, familyId } },
-  });
-  if (requesterMember?.systemRole !== "FAMILY_ADMIN") {
-    throw new Error("Hanya Family Admin yang dapat menambah anggota");
-  }
-
-  const username = (formData.get("username") as string)?.trim();
-  const name = (formData.get("name") as string)?.trim();
-  const password = formData.get("password") as string;
-  const relationship = (formData.get("relationship") as string) || "ANAK";
-
-  if (!username || !name || !password) {
-    throw new Error("Username, nama, dan password wajib diisi");
-  }
-  if (password.length < 8) {
-    throw new Error("Password minimal 8 karakter");
-  }
-
-  const existingUsername = await prisma.profile.findUnique({ where: { username } });
-  if (existingUsername) throw new Error("Username sudah dipakai, pilih yang lain");
-
-  const email = `${username}@sikara.internal`;
-
-  const supabaseAdmin = createAdminClient();
-  const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-  if (error || !created.user) {
-    throw new Error(`Gagal membuat akun: ${error?.message ?? "unknown error"}`);
-  }
-
+export async function createFamilyMember(
+  familyId: string,
+  formData: FormData,
+): Promise<{ error?: string }> {
   try {
-    await prisma.$transaction([
-      prisma.profile.create({
-        data: {
-          id: created.user.id,
-          email,
-          username,
-          name,
-          role: "MEMBER",
-          status: "ACTIVE",
-        },
-      }),
-      prisma.familyMember.create({
-        data: {
-          profileId: created.user.id,
-          familyId,
-          systemRole: "MEMBER",
-          relationship: relationship as "AYAH" | "IBU" | "ANAK",
-        },
-      }),
-    ]);
-  } catch (dbError) {
-    await supabaseAdmin.auth.admin.deleteUser(created.user.id);
-    throw dbError;
-  }
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
 
-  revalidatePath(`/dashboard/families/${familyId}`);
+    const requesterMember = await prisma.familyMember.findUnique({
+      where: { profileId_familyId: { profileId: user.id, familyId } },
+    });
+    if (requesterMember?.systemRole !== "FAMILY_ADMIN") {
+      throw new Error("Hanya Family Admin yang dapat menambah anggota");
+    }
+
+    const username = (formData.get("username") as string)?.trim();
+    const name = (formData.get("name") as string)?.trim();
+    const password = formData.get("password") as string;
+    const relationship = (formData.get("relationship") as string) || "ANAK";
+
+    if (!username || !name || !password) {
+      throw new Error("Username, nama, dan password wajib diisi");
+    }
+    if (password.length < 8) {
+      throw new Error("Password minimal 8 karakter");
+    }
+
+    const existingUsername = await prisma.profile.findUnique({ where: { username } });
+    if (existingUsername) throw new Error("Username sudah dipakai, pilih yang lain");
+
+    const email = `${username}@sikara.internal`;
+
+    const supabaseAdmin = createAdminClient();
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+    if (error || !created.user) {
+      throw new Error(`Gagal membuat akun: ${error?.message ?? "unknown error"}`);
+    }
+
+    try {
+      await prisma.$transaction([
+        prisma.profile.create({
+          data: {
+            id: created.user.id,
+            email,
+            username,
+            name,
+            role: "MEMBER",
+            status: "ACTIVE",
+          },
+        }),
+        prisma.familyMember.create({
+          data: {
+            profileId: created.user.id,
+            familyId,
+            systemRole: "MEMBER",
+            relationship: relationship as "AYAH" | "IBU" | "ANAK",
+          },
+        }),
+      ]);
+    } catch (dbError) {
+      await supabaseAdmin.auth.admin.deleteUser(created.user.id);
+      throw dbError;
+    }
+
+    revalidatePath(`/dashboard/families/${familyId}`);
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Terjadi kesalahan tidak diketahui" };
+  }
 }
 
 export async function removeMember(formData: FormData) {
