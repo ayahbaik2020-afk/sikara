@@ -19,6 +19,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const TRANSACTION_TYPE_META: Record<string, { label: string; dot: string }> = {
+  INCOME: { label: "Pemasukan", dot: "bg-green-500" },
+  EXPENSE: { label: "Pengeluaran", dot: "bg-red-500" },
+  TRANSFER: { label: "Transfer", dot: "bg-blue-500" },
+};
+
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour >= 4 && hour < 11) return "Selamat Pagi";
@@ -246,24 +252,27 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentTransactions.map((t) => (
-                  <div key={t.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-block size-2 rounded-full ${t.type === "INCOME" ? "bg-green-500" : "bg-red-500"}`} />
-                      <div>
-                        <p className="text-sm font-medium">
-                          {t.type === "INCOME" ? "Pemasukan" : "Pengeluaran"} — Rp {Number(t.amount).toLocaleString("id-ID")}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {t.category?.name} · {t.wallet.name}{t.description ? ` · ${t.description}` : ""}
-                        </p>
+                {recentTransactions.map((t) => {
+                  const meta = TRANSACTION_TYPE_META[t.type] ?? { label: t.type, dot: "bg-muted-foreground" };
+                  return (
+                    <div key={t.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <span className={`inline-block size-2 rounded-full ${meta.dot}`} />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {meta.label} — Rp {Number(t.amount).toLocaleString("id-ID")}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {t.category?.name ? `${t.category.name} · ` : ""}{t.wallet.name}{t.description ? ` · ${t.description}` : ""}
+                          </p>
+                        </div>
                       </div>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(t.transactionDate).toLocaleDateString("id-ID")}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(t.transactionDate).toLocaleDateString("id-ID")}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
